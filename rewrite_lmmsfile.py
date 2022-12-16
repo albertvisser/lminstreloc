@@ -35,7 +35,6 @@ def copyfile(filename):
 
 
 def find_filenames(element):
-    # find locations of filenames in XML
     """search for instrument filenames in the given XML
 
     returns the locations (search paths, as 2-tuples) and the filenames themselves
@@ -59,7 +58,6 @@ def find_filenames(element):
 
 
 def update_xml(dialog_data, project_copy, project_rewrite):
-    # write back changes
     """modify the filenames that need to be changed at the given locations in the XML
     """
     # gewoon maar met een text replace van alle gevonden en gewijzigde strings?
@@ -93,4 +91,3 @@ def get_root(project_copy):
 
 def update_root(element, filename_data):
     "update changes in the root (only needed if we do this using etree (which we don't)"
-    pass
