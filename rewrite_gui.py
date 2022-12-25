@@ -56,7 +56,7 @@ class ShowFiles(qtw.QWidget):
         btn = qtw.QPushButton('&Vervangen', self)
         btn.clicked.connect(self.confirm)
         hbox.addWidget(btn)
-        btn = qtw.QPushButton('&Afbreken`', self)
+        btn = qtw.QPushButton('&Klaar', self)
         btn.clicked.connect(self.close)
         hbox.addWidget(btn)
         hbox.addStretch()

@@ -9,6 +9,13 @@ import rewrite_gui
 
 instr_root = {'audiofileprocessor': pathlib.Path('~/lmms/samples').expanduser(),
               'sf2player': pathlib.Path('~/lmms/soundfonts').expanduser()}
+# er zijn meerdere paden per type instrument mogelijk: /usr/share/sounds o.i.d. is ook mogelijk
+# een relatief pad kan ook in /usr/share/lmms/samples zitten of in /usr/share/soundfonts
+# deze laatste is waar ik pacman/pamac de soundfonts heeft laten terechtkomen dus het zou kunnen
+# zijn dat lmms die niet kent
+# als ik ze sleep vanuit de linkerbalk krijg ik relatieve locaties, als ik ze selecteer in de
+# "instrumentblokjes" krijg ik absolute (volledige) paden
+# ik kan dus beter de paden zoals ze zijn onthouden en uitproberen welke kloppen
 
 
 def copyfile(filename):
@@ -30,8 +37,15 @@ def copyfile(filename):
     value = gui.show_screen()
     if value:
         print(f"gui ended with nonzero returncode {value}")
+        return
     # write back changes
-    update_xml(me.filedata, project_copy, project_rewrite)
+    changes, err = update_xml(me.filedata, project_copy, project_rewrite)
+    if err:
+        print(err)
+    elif changes:
+        print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
+    else:
+        print('Done.')
 
 
 def find_filenames(element):
@@ -46,14 +60,16 @@ def find_filenames(element):
             instruments = item.findall('instrumenttrack/instrument')
             for instrument in instruments:
                 if instrument[0].tag in ('audiofileprocessor', 'sf2player'):
-                    filename = str(instr_root[instrument[0].tag] / instrument[0].get('src'))
-                    result.append(((item, instrument[0]), filename))
+                    # filename = str(instr_root[instrument[0].tag] / instrument[0].get('src'))
+                    # result.append(((item, instrument[0]), '0', filename))
+                    result.append(((item, instrument[0]), '0', instrument[0].get('src')))
         elif item.get('type') == '1':
             instruments = item.findall('bbtrack/trackcontainer/track/instrumenttrack/instrument')
             for instrument in instruments:
                 if instrument[0].tag in ('audiofileprocessor', 'sf2player'):
-                    filename = str(instr_root[instrument[0].tag] / instrument[0].get('src'))
-                    result.append(((item, instrument[0]), filename))
+                    # filename = str(instr_root[instrument[0].tag] / instrument[0].get('src'))
+                    # result.append(((item, instrument[0]), '1', filename))
+                    result.append(((item, instrument[0]), '1', instrument[0].get('src')))
     return result
 
 
@@ -66,21 +82,27 @@ def update_xml(dialog_data, project_copy, project_rewrite):
     # newdata = et.ElementTree(newroot).write(str(project_rewrite))
     # maar met
     data = project_copy.read_text()
+    changes = False
+    mld = []
     for oldfile, newfile in dialog_data:
         if pathlib.Path(newfile).exists():
             for path in instr_root.values():
                 first_part = str(path)
-                print(first_part)
+                # print(first_part)
                 if oldfile.startswith(first_part):
                     oldfile = oldfile.replace(first_part, '')[1:]
+                    changes = True
                 if newfile.startswith(first_part):
                     newfile = newfile.replace(first_part, '')[1:]
-            print(oldfile, newfile)
+                    changes = True
+            # print(oldfile, newfile)
             data = data.replace(oldfile, newfile)
+            changes = True
         else:
-            print(f"new name {newfile} not used, file doesn't exist")
-    project_rewrite.write_text(data)
-    print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
+            mld.append(f"new name {newfile} not used, file doesn't exist")
+    if changes and not mld:
+        project_rewrite.write_text(data)
+    return '\n'.join(mld)
 
 
 def get_root(project_copy):
