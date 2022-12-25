@@ -2,10 +2,12 @@
 .
 
 [testscripts]
-act: test_rewrite_lmmsfile.py
+app: test_rewrite_lmmsfile.py
 gui: test_rewrite_gui.py
+lst: test_samplelister.py
 
 [testees]
-act: rewrite_lmmsfile.py
+app: rewrite_lmmsfile.py
 gui: rewrite_gui.py
+lst: samplelister.py
 
