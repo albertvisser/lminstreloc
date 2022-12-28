@@ -37,19 +37,19 @@ def list_files(path):
         if file.name.startswith('.'):
             continue
         if file.is_dir():
-            result.extend(list_files(path / file))
+            result.extend(list_files(file))
             continue
         if file.suffix not in ('.mmp', '.mmpz'):
             continue
-        instrument_files = analyse_file(path / file)
+        instrument_files = analyse_file(file)
         for name in instrument_files:
             in_sysloc, in_userloc = check_for_locations(name)
             if in_sysloc:
-                result.append(f'{path}/{file}: file {name} exists in {sysloc}')
+                result.append(f'{file}: file {name} exists in {sysloc}')
             elif in_userloc:
-                result.append(f'{path}/{file}: file {name} exists in {userloc}')
+                result.append(f'{file}: file {name} exists in {userloc}')
             else:
-                result.append(f'{path}/{file}: file {name} not found')
+                result.append(f'{file}: file {name} not found')
     return result
 
 
@@ -72,6 +72,17 @@ def analyse_file(filename):
 def check_for_locations(filename):
     """teruggeven op welke locaties een filenaam voorkomt
     """
-    in_sysloc = (sysloc / filename).exists()
-    in_userloc = (userloc / filename).exists()
+    if filename.startswith('/'):
+        path = pathlib.Path(filename)
+        try:
+            in_sysloc = path.relative_to(sysloc)
+        except ValueError:
+            in_sysloc = False
+        try:
+            in_userloc = path.relative_to(userloc)
+        except ValueError:
+            in_userloc = False
+    else:
+        in_sysloc = (sysloc / filename).exists()
+        in_userloc = (userloc / filename).exists()
     return in_sysloc, in_userloc

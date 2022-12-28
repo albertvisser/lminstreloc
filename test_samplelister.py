@@ -52,27 +52,27 @@ def test_list_files(monkeypatch, capsys):
     monkeypatch.setattr(sl, 'analyse_file', mock_analyse)
     monkeypatch.setattr(sl, 'check_for_locations', mock_check)
     assert sl.list_files(sl.pathlib.Path('test')) == [
-            'test/file.mmp: file /absolute/path exists in /usr/share/lmms/samples',
-            'test/file.mmp: file rel/file1 exists in /home/albert/lmms/samples',
-            'test/file.mmp: file rel/file2 not found',
-            'test/file.mmp: file rel/file3 exists in /usr/share/lmms/samples',
-            'test/dir/file.mmp: file /absolute/path exists in /home/albert/lmms/samples',
-            'test/dir/file.mmp: file rel/file1 not found',
-            'test/dir/file.mmp: file rel/file2 exists in /usr/share/lmms/samples',
-            'test/dir/file.mmp: file rel/file3 exists in /home/albert/lmms/samples',
-            'test/dir/filet.mmpz: file /absolute/path not found',
-            'test/dir/filet.mmpz: file rel/file1 exists in /usr/share/lmms/samples',
-            'test/dir/filet.mmpz: file rel/file2 exists in /home/albert/lmms/samples',
-            'test/dir/filet.mmpz: file rel/file3 not found',
-            'test/filet.mmpz: file /absolute/path exists in /usr/share/lmms/samples',
-            'test/filet.mmpz: file rel/file1 exists in /home/albert/lmms/samples',
-            'test/filet.mmpz: file rel/file2 not found',
-            'test/filet.mmpz: file rel/file3 exists in /usr/share/lmms/samples']
+            'file.mmp: file /absolute/path exists in /usr/share/lmms/samples',
+            'file.mmp: file rel/file1 exists in /home/albert/lmms/samples',
+            'file.mmp: file rel/file2 not found',
+            'file.mmp: file rel/file3 exists in /usr/share/lmms/samples',
+            'file.mmp: file /absolute/path exists in /home/albert/lmms/samples',
+            'file.mmp: file rel/file1 not found',
+            'file.mmp: file rel/file2 exists in /usr/share/lmms/samples',
+            'file.mmp: file rel/file3 exists in /home/albert/lmms/samples',
+            'filet.mmpz: file /absolute/path not found',
+            'filet.mmpz: file rel/file1 exists in /usr/share/lmms/samples',
+            'filet.mmpz: file rel/file2 exists in /home/albert/lmms/samples',
+            'filet.mmpz: file rel/file3 not found',
+            'filet.mmpz: file /absolute/path exists in /usr/share/lmms/samples',
+            'filet.mmpz: file rel/file1 exists in /home/albert/lmms/samples',
+            'filet.mmpz: file rel/file2 not found',
+            'filet.mmpz: file rel/file3 exists in /usr/share/lmms/samples']
     assert capsys.readouterr().out == (
-            "called analyse_file() with args (PosixPath('test/file.mmp'),)\n"
-            "called analyse_file() with args (PosixPath('test/dir/file.mmp'),)\n"
-            "called analyse_file() with args (PosixPath('test/dir/filet.mmpz'),)\n"
-            "called analyse_file() with args (PosixPath('test/filet.mmpz'),)\n")
+            "called analyse_file() with args (PosixPath('file.mmp'),)\n"
+            "called analyse_file() with args (PosixPath('file.mmp'),)\n"
+            "called analyse_file() with args (PosixPath('filet.mmpz'),)\n"
+            "called analyse_file() with args (PosixPath('filet.mmpz'),)\n")
 
 
 def test_list_samples(monkeypatch, capsys):
