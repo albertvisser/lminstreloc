@@ -58,6 +58,83 @@ def test_update_xml(monkeypatch, capsys):
                                        " 'bargl bargl boingo bboingo')\n")
 
 
-def _test_copyfile(monkeypatch, capsys):
-    assert capsys.readouterr().out == ('project_rewrite written,'
-                                       ' recompress by loading into lmms and rewrite as mmpz')
+def test_copyfile(monkeypatch, capsys):
+    def mock_run(*args, **kwargs):
+        print('called subprocess.run() with args', args, kwargs)
+    def mock_get_root(*args):
+        print('called get_root with args', args)
+        return 'root'
+    def mock_find(*args):
+        print('called find_filenames with args', args)
+        return [('x', 'file1'), ('y', 'file2'), ('z', 'file1')]
+    class MockShow:
+        def __init__(self, me, files):
+            print('called ShowFiles() with args', me, sorted(files))
+            self.me = me
+            self.me.filedata = []
+        def show_screen(self):
+            print('called ShowFiles.show_screen()')
+    def mock_update(*args):
+        print('called update_xml() with args', args)
+        return True, ''
+    def mock_update_message(*args):
+        print('called update_xml() with args', args)
+        return True, 'Message'
+    def mock_update_nochanges(*args):
+        print('called update_xml() with args', args)
+        return False, ''
+    monkeypatch.setattr(rwrt.subprocess, 'run', mock_run)
+    monkeypatch.setattr(rwrt, 'get_root', mock_get_root)
+    monkeypatch.setattr(rwrt, 'find_filenames', mock_find)
+
+    monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
+    monkeypatch.setattr(rwrt, 'update_xml', mock_update_message)
+    filename = '/tmp/test_rwrt.mmpz'
+    filepath = rwrt.pathlib.Path(filename)
+    filepath2 = rwrt.pathlib.Path(filename).with_suffix('.mmp')
+    filepath3 = rwrt.pathlib.Path(filename).with_name(f'{filepath.stem}-2.mmp')
+    rwrt.copyfile(filename)
+    assert capsys.readouterr().out == (
+            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
+            " {'stdout': <_io.TextIOWrapper name='/tmp/test_rwrt.mmp' mode='w' encoding='UTF-8'>}\n"
+            f"called get_root with args ({filepath2!r},)\n"
+            "called find_filenames with args ('root',)\n"
+            "called ShowFiles() with args namespace() ['file1', 'file2']\n"
+            "called ShowFiles.show_screen()\n"
+            f"called update_xml() with args ([], {filepath2!r}, {filepath3!r})\n"
+            'Message\n')
+    # monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
+    monkeypatch.setattr(rwrt, 'update_xml', mock_update_nochanges)
+    rwrt.copyfile(filename)
+    assert capsys.readouterr().out == (
+            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
+            " {'stdout': <_io.TextIOWrapper name='/tmp/test_rwrt.mmp' mode='w' encoding='UTF-8'>}\n"
+            f"called get_root with args ({filepath2!r},)\n"
+            "called find_filenames with args ('root',)\n"
+            "called ShowFiles() with args namespace() ['file1', 'file2']\n"
+            "called ShowFiles.show_screen()\n"
+            f"called update_xml() with args ([], {filepath2!r}, {filepath3!r})\n"
+            'Done.\n')
+    monkeypatch.setattr(rwrt, 'update_xml', mock_update)
+    rwrt.copyfile(filename)
+    assert capsys.readouterr().out == (
+            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
+            " {'stdout': <_io.TextIOWrapper name='/tmp/test_rwrt.mmp' mode='w' encoding='UTF-8'>}\n"
+            f"called get_root with args ({filepath2!r},)\n"
+            "called find_filenames with args ('root',)\n"
+            "called ShowFiles() with args namespace() ['file1', 'file2']\n"
+            "called ShowFiles.show_screen()\n"
+            f"called update_xml() with args ([], {filepath2!r}, {filepath3!r})\n"
+            f'{filepath3} written, recompress by loading into lmms and rewrite as mmpz\n')
+    monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
+    monkeypatch.setattr(MockShow, 'show_screen', lambda *x: 1)
+    monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
+    monkeypatch.setattr(rwrt, 'update_xml', mock_update)
+    rwrt.copyfile(filename)
+    assert capsys.readouterr().out == (
+            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
+            " {'stdout': <_io.TextIOWrapper name='/tmp/test_rwrt.mmp' mode='w' encoding='UTF-8'>}\n"
+            f"called get_root with args ({filepath2!r},)\n"
+            "called find_filenames with args ('root',)\n"
+            "called ShowFiles() with args namespace() ['file1', 'file2']\n"
+            'gui ended with nonzero returncode 1\n')
