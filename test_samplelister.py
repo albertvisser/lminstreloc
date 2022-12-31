@@ -18,13 +18,19 @@ def test_analyse_file():
 
 
 def test_check_for_locations():
-    assert sl.check_for_locations(sl.pathlib.Path('drums/snare01.ogg')) == (True, False)
-    assert sl.check_for_locations(sl.pathlib.Path('reconstructed/Ledguitar2.wav')) == (False, True)
+    path = str(sl.sysloc / 'sample.file')
+    assert sl.check_for_locations(path) == (True, False)
+    path = str(sl.userloc / 'sample.file')
+    assert sl.check_for_locations(path) == (False, True)
+    assert sl.check_for_locations('/nowhere/sample.file') == (False, False)
+    # dit is quick 'n dirty, ervan uitgaande dat deze bestanden op de betreffende locaties staan
+    assert sl.check_for_locations('drums/snare01.ogg') == (True, False)
+    assert sl.check_for_locations('reconstructed/Ledguitar2.wav') == (False, True)
 
 
 def test_list_files(monkeypatch, capsys):
     def mock_iterdir(*args):
-        return [sl.pathlib.Path('file.mmp'), sl.pathlib.Path('dir'),
+        return [sl.pathlib.Path('file.mmp'), sl.pathlib.Path('dir'), sl.pathlib.Path('.ignore'),
                 sl.pathlib.Path('fille.mmpx'), sl.pathlib.Path('filet.mmpz')]
     count = 0
     def mock_isdir(*args):

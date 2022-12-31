@@ -75,11 +75,11 @@ def check_for_locations(filename):
     if filename.startswith('/'):
         path = pathlib.Path(filename)
         try:
-            in_sysloc = path.relative_to(sysloc)
+            in_sysloc = path.relative_to(sysloc) == pathlib.Path(path.name)
         except ValueError:
             in_sysloc = False
         try:
-            in_userloc = path.relative_to(userloc)
+            in_userloc = path.relative_to(userloc) == pathlib.Path(path.name)
         except ValueError:
             in_userloc = False
     else:

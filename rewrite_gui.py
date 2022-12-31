@@ -95,10 +95,10 @@ class ShowFiles(qtw.QWidget):
         line.append(widget)
         layout.addWidget(widget, lineno, 2)
         widget = qtw.QCheckBox('', self)
-        self.file_lines.append(line)
         widget.setEnabled(False)  # ReadOnly(True)
         line.append(widget)
         layout.addWidget(widget, lineno, 3)
+        self.file_lines.append(line)
 
     def check(self):
         """check for existence of newly added filenames
