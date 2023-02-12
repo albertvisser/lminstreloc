@@ -58,7 +58,7 @@ def test_update_xml(monkeypatch, capsys):
                                        " 'bargl bargl boingo bboingo')\n")
 
 
-def test_copyfile(monkeypatch, capsys):
+def test_copyfile(monkeypatch, capsys, tmp_path):
     def mock_run(*args, **kwargs):
         print('called subprocess.run() with args', args, kwargs)
     def mock_get_root(*args):
@@ -89,14 +89,14 @@ def test_copyfile(monkeypatch, capsys):
 
     monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
     monkeypatch.setattr(rwrt, 'update_xml', mock_update_message)
-    filename = '/tmp/test_rwrt.mmpz'
-    filepath = rwrt.pathlib.Path(filename)
-    filepath2 = rwrt.pathlib.Path(filename).with_suffix('.mmp')
-    filepath3 = rwrt.pathlib.Path(filename).with_name(f'{filepath.stem}-2.mmp')
+    filepath = tmp_path / 'test_rwrt.mmpz'
+    filename = str(filepath)
+    filepath2 = filepath.with_suffix('.mmp')
+    filepath3 = filepath.with_name(f'{filepath.stem}-2.mmp')
     rwrt.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            " {'stdout': <_io.TextIOWrapper name='/tmp/test_rwrt.mmp' mode='w' encoding='UTF-8'>}\n"
+            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
             f"called get_root with args ({filepath2!r},)\n"
             "called find_filenames with args ('root',)\n"
             "called ShowFiles() with args namespace() ['file1', 'file2']\n"
@@ -108,7 +108,7 @@ def test_copyfile(monkeypatch, capsys):
     rwrt.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            " {'stdout': <_io.TextIOWrapper name='/tmp/test_rwrt.mmp' mode='w' encoding='UTF-8'>}\n"
+            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
             f"called get_root with args ({filepath2!r},)\n"
             "called find_filenames with args ('root',)\n"
             "called ShowFiles() with args namespace() ['file1', 'file2']\n"
@@ -119,7 +119,7 @@ def test_copyfile(monkeypatch, capsys):
     rwrt.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            " {'stdout': <_io.TextIOWrapper name='/tmp/test_rwrt.mmp' mode='w' encoding='UTF-8'>}\n"
+            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
             f"called get_root with args ({filepath2!r},)\n"
             "called find_filenames with args ('root',)\n"
             "called ShowFiles() with args namespace() ['file1', 'file2']\n"
@@ -133,7 +133,7 @@ def test_copyfile(monkeypatch, capsys):
     rwrt.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            " {'stdout': <_io.TextIOWrapper name='/tmp/test_rwrt.mmp' mode='w' encoding='UTF-8'>}\n"
+            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
             f"called get_root with args ({filepath2!r},)\n"
             "called find_filenames with args ('root',)\n"
             "called ShowFiles() with args namespace() ['file1', 'file2']\n"
