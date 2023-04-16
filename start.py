@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 """starter program for lminstreloc: a tool to correct filenames for instruments in LMMS modules
 """
 import sys
