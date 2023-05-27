@@ -171,13 +171,16 @@ def test_setup_screen(monkeypatch, capsys):
     # me.conf.read_string( '\n'.join(('[one]', 'first', '', '[two]', '',
     #                                 '[Mod Directories]', 'one: one, eno', 'two: two',
     #                                 'first: first')))
-    testobj = gui.ShowFiles(types.SimpleNamespace(filedata=[]), ['old_filename'])
+    testobj = gui.ShowFiles(types.SimpleNamespace(filedata=[], whereis=lambda *x: (True, True)),
+                            ['old_filename'])
     assert len(testobj.file_lines) == 1
     items = testobj.file_lines[0]
     assert isinstance(items[0], gui.qtw.QLineEdit)
     assert isinstance(items[1], gui.qtw.QCheckBox)
-    assert isinstance(items[2], gui.qtw.QLineEdit)
-    assert isinstance(items[3], gui.qtw.QCheckBox)
+    assert isinstance(items[2], gui.qtw.QCheckBox)
+    assert isinstance(items[3], gui.qtw.QLineEdit)
+    assert isinstance(items[4], gui.qtw.QCheckBox)
+    assert isinstance(items[5], gui.qtw.QCheckBox)
     assert capsys.readouterr().out == ('called QApplication.__init__()\n'
                                        'called QWidget.__init__()\n'
                                        'called QWidget.setWindowTitle()\n'
@@ -199,15 +202,26 @@ def test_setup_screen(monkeypatch, capsys):
                                        'called edit.insert(`old_filename`)\n'
                                        'called edit.setReadOnly(`True`)\n'
                                        'called grid.addWidget()\n'
+                                       'called MockHBoxLayout.__init__()\n'
                                        'called MockCheckBox.__init__()\n'
-                                       'called check.setChecked(True)\n'
+                                       f'called check.setChecked(True)\n'
                                        'called check.setEnabled(False)\n'
-                                       'called grid.addWidget()\n'
+                                       'called hbox.addWidget()\n'
+                                       'called MockCheckBox.__init__()\n'
+                                       f'called check.setChecked(True)\n'
+                                       'called check.setEnabled(False)\n'
+                                       'called hbox.addWidget()\n'
+                                       'called grid.addLayout()\n'
                                        'called MockLineEdit.__init__()\n'
                                        'called grid.addWidget()\n'
+                                       'called MockHBoxLayout.__init__()\n'
                                        'called MockCheckBox.__init__()\n'
                                        'called check.setEnabled(False)\n'
-                                       'called grid.addWidget()\n'
+                                       'called hbox.addWidget()\n'
+                                       'called MockCheckBox.__init__()\n'
+                                       'called check.setEnabled(False)\n'
+                                       'called hbox.addWidget()\n'
+                                       'called grid.addLayout()\n'
                                        'called vbox.addLayout()\n'
                                        'called MockHBoxLayout.__init__()\n'
                                        'called hbox.addStretch()\n'

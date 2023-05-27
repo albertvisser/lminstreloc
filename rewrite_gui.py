@@ -41,9 +41,9 @@ class ShowFiles(qtw.QWidget):
         gbox = qtw.QGridLayout()
         line = 0
         gbox.addWidget(qtw.QLabel('Old filename', self), line, 0)
-        gbox.addWidget(qtw.QLabel('Exists', self), line, 1)
+        gbox.addWidget(qtw.QLabel('Sys/Usr', self), line, 1)
         gbox.addWidget(qtw.QLabel('New filename', self), line, 2)
-        gbox.addWidget(qtw.QLabel('Exists', self), line, 3)
+        gbox.addWidget(qtw.QLabel('Sys/Usr', self), line, 3)
         for name in self.filenames:
             line += 1
             self.add_file_line(gbox, line, name)
@@ -56,7 +56,7 @@ class ShowFiles(qtw.QWidget):
         btn = qtw.QPushButton('&Vervangen', self)
         btn.clicked.connect(self.confirm)
         hbox.addWidget(btn)
-        btn = qtw.QPushButton('&Klaar', self)
+        btn = qtw.QPushButton('&Afbreken', self)
         btn.clicked.connect(self.close)
         hbox.addWidget(btn)
         hbox.addStretch()
@@ -86,34 +86,50 @@ class ShowFiles(qtw.QWidget):
         widget.setReadOnly(True)
         layout.addWidget(widget, lineno, 0)
         line.append(widget)
+        layout2 = qtw.QHBoxLayout()
         widget = qtw.QCheckBox('', self)
-        widget.setChecked(os.path.exists(old_filename))
+        in_sysloc, in_userloc = self.master.whereis(old_filename)
+        widget.setChecked(in_sysloc)
         widget.setEnabled(False)  # ReadOnly(True)
         line.append(widget)
-        layout.addWidget(widget, lineno, 1)
+        layout2.addWidget(widget)
+        widget = qtw.QCheckBox('', self)
+        widget.setChecked(in_userloc)
+        widget.setEnabled(False)  # ReadOnly(True)
+        line.append(widget)
+        layout2.addWidget(widget)
+        layout.addLayout(layout2, lineno, 1)
         widget = qtw.QLineEdit(self)
         line.append(widget)
         layout.addWidget(widget, lineno, 2)
+        layout2 = qtw.QHBoxLayout()
         widget = qtw.QCheckBox('', self)
         widget.setEnabled(False)  # ReadOnly(True)
         line.append(widget)
-        layout.addWidget(widget, lineno, 3)
+        layout2.addWidget(widget)
+        widget = qtw.QCheckBox('', self)
+        widget.setEnabled(False)  # ReadOnly(True)
+        line.append(widget)
+        layout2.addWidget(widget)
+        layout.addLayout(layout2, lineno, 3)
         self.file_lines.append(line)
 
     def check(self):
         """check for existence of newly added filenames
         """
         for line in self.file_lines:
-            new_filename = line[2].text()
+            new_filename = line[3].text()
             if new_filename:
-                line[3].setChecked(os.path.exists(new_filename))
+                in_sysloc, in_userloc = self.master.whereis(new_filename)
+                line[4].setChecked(in_sysloc)
+                line[5].setChecked(in_userloc)
 
     def confirm(self):
         """pass the changed data back to the caller
         """
         for line in self.file_lines:
             old_filename = line[0].text()
-            new_filename = line[2].text()
+            new_filename = line[3].text()
             if new_filename:
                 self.master.filedata.append((old_filename, new_filename))
         self.close()

@@ -1,6 +1,6 @@
 import types
 import pytest
-import rewrite_lmmsfile as rwrt
+import rewrite_lmmsfile as testee
 
 def _test_update_root(monkeypatch, capsys):
     pass  # niet nodig als ik niet het vervangen niet via etree doe
@@ -12,13 +12,24 @@ def test_get_root(monkeypatch, capsys):
             print('called ElementTree() with args', args, kwargs)
         def getroot(self):
             return 'root'
-    monkeypatch.setattr(rwrt.et, 'ElementTree', MockTree)
-    assert rwrt.get_root('test') == 'root'
+    monkeypatch.setattr(testee.et, 'ElementTree', MockTree)
+    assert testee.get_root('test') == 'root'
+
+
+def test_whereis():
+    path = str(testee.sysloc / 'sample.file')
+    assert testee.whereis(path) == (True, False)
+    path = str(testee.userloc / 'sample.file')
+    assert testee.whereis(path) == (False, True)
+    assert testee.whereis('/nowhere/sample.file') == (False, False)
+    # dit is quick 'n dirty, ervan uitgaande dat deze bestanden op de betreffende locaties staan
+    assert testee.whereis('drums/snare01.ogg') == (True, False)
+    assert testee.whereis('audio-wav/guitar/Ledguitar2_reconstructed.wav') == (False, True)
 
 
 def test_find_filenames(monkeypatch, capsys):
-    element = rwrt.et.ElementTree(file='testdata.xml').getroot()
-    data = rwrt.find_filenames(element)
+    element = testee.et.ElementTree(file='testdata.xml').getroot()
+    data = testee.find_filenames(element)
     newdata = []
     for track, tracktype, name in data:
         newtrack = [element.tag for element in track]
@@ -36,23 +47,23 @@ def test_find_filenames(monkeypatch, capsys):
 def test_update_xml(monkeypatch, capsys):
     def mock_write(*args):
         print('called path.write_text() with args', args)
-    monkeypatch.setattr(rwrt.pathlib.Path, 'read_text', lambda *x: '')
-    monkeypatch.setattr(rwrt.pathlib.Path, 'write_text', mock_write)
-    monkeypatch.setattr(rwrt.pathlib.Path, 'exists', lambda *x: False)
-    assert rwrt.update_xml([], rwrt.pathlib.Path('project_copy'),
-                           rwrt.pathlib.Path('project_rewrite')) == ''
+    monkeypatch.setattr(testee.pathlib.Path, 'read_text', lambda *x: '')
+    monkeypatch.setattr(testee.pathlib.Path, 'write_text', mock_write)
+    monkeypatch.setattr(testee.pathlib.Path, 'exists', lambda *x: False)
+    assert testee.update_xml([], testee.pathlib.Path('project_copy'),
+                           testee.pathlib.Path('project_rewrite')) == (False, '')
     assert capsys.readouterr().out == ''
-    assert rwrt.update_xml([('gargl', 'bargl'), ('oingo', 'boingo')],
-                           rwrt.pathlib.Path('project_copy'),
-                           rwrt.pathlib.Path('project_rewrite')) == (
+    assert testee.update_xml([('gargl', 'bargl'), ('oingo', 'boingo')],
+                           testee.pathlib.Path('project_copy'),
+                           testee.pathlib.Path('project_rewrite')) == (False,
                                    "new name bargl not used, file doesn't exist\n"
                                    "new name boingo not used, file doesn't exist")
     assert capsys.readouterr().out == ''
-    monkeypatch.setattr(rwrt.pathlib.Path, 'read_text', lambda *x: 'gargl bargl oingo boingo')
-    monkeypatch.setattr(rwrt.pathlib.Path, 'exists', lambda *x: True)
-    assert rwrt.update_xml([('gargl', 'bargl'), ('oingo', 'boingo')],
-                           rwrt.pathlib.Path('project_copy'),
-                           rwrt.pathlib.Path('project_rewrite')) == ''
+    monkeypatch.setattr(testee.pathlib.Path, 'read_text', lambda *x: 'gargl bargl oingo boingo')
+    monkeypatch.setattr(testee.pathlib.Path, 'exists', lambda *x: True)
+    assert testee.update_xml([('gargl', 'bargl'), ('oingo', 'boingo')],
+                           testee.pathlib.Path('project_copy'),
+                           testee.pathlib.Path('project_rewrite')) == (True, '')
     assert capsys.readouterr().out == ("called path.write_text() with args"
                                        " (PosixPath('project_rewrite'),"
                                        " 'bargl bargl boingo bboingo')\n")
@@ -74,6 +85,15 @@ def test_copyfile(monkeypatch, capsys, tmp_path):
             self.me.filedata = []
         def show_screen(self):
             print('called ShowFiles.show_screen()')
+            return 0
+    class MockShow2:
+        def __init__(self, me, files):
+            print('called ShowFiles() with args', me, sorted(files))
+            self.me = me
+            self.me.filedata = ['filedata']
+        def show_screen(self):
+            print('called ShowFiles.show_screen()')
+            return 0
     def mock_update(*args):
         print('called update_xml() with args', args)
         return True, ''
@@ -83,58 +103,79 @@ def test_copyfile(monkeypatch, capsys, tmp_path):
     def mock_update_nochanges(*args):
         print('called update_xml() with args', args)
         return False, ''
-    monkeypatch.setattr(rwrt.subprocess, 'run', mock_run)
-    monkeypatch.setattr(rwrt, 'get_root', mock_get_root)
-    monkeypatch.setattr(rwrt, 'find_filenames', mock_find)
+    monkeypatch.setattr(testee.subprocess, 'run', mock_run)
+    monkeypatch.setattr(testee, 'get_root', mock_get_root)
+    monkeypatch.setattr(testee, 'find_filenames', mock_find)
 
-    monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
-    monkeypatch.setattr(rwrt, 'update_xml', mock_update_message)
-    filepath = tmp_path / 'test_rwrt.mmpz'
+    monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
+    monkeypatch.setattr(testee, 'update_xml', mock_update_message)
+    filepath = tmp_path / 'test_testee.mmpz'
     filename = str(filepath)
     filepath2 = filepath.with_suffix('.mmp')
     filepath3 = filepath.with_name(f'{filepath.stem}-2.mmp')
-    rwrt.copyfile(filename)
+    testee.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
             f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
             f"called get_root with args ({filepath2!r},)\n"
             "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace() ['file1', 'file2']\n"
+            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
+            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
+            " ['file1', 'file2']\n"
             "called ShowFiles.show_screen()\n"
-            f"called update_xml() with args ([], {filepath2!r}, {filepath3!r})\n"
+            'Canceled\n')
+
+    monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow2)
+    monkeypatch.setattr(testee, 'update_xml', mock_update_message)
+    testee.copyfile(filename)
+    assert capsys.readouterr().out == (
+            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
+            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
+            f"called get_root with args ({filepath2!r},)\n"
+            "called find_filenames with args ('root',)\n"
+            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
+            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
+            " ['file1', 'file2']\n"
+            "called ShowFiles.show_screen()\n"
+            f"called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
             'Message\n')
-    # monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
-    monkeypatch.setattr(rwrt, 'update_xml', mock_update_nochanges)
-    rwrt.copyfile(filename)
+    monkeypatch.setattr(testee, 'update_xml', mock_update_nochanges)
+    testee.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
             f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
             f"called get_root with args ({filepath2!r},)\n"
             "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace() ['file1', 'file2']\n"
+            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
+            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
+            " ['file1', 'file2']\n"
             "called ShowFiles.show_screen()\n"
-            f"called update_xml() with args ([], {filepath2!r}, {filepath3!r})\n"
-            'Done.\n')
-    monkeypatch.setattr(rwrt, 'update_xml', mock_update)
-    rwrt.copyfile(filename)
+            f"called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
+            'No changes\n')
+    monkeypatch.setattr(testee, 'update_xml', mock_update)
+    testee.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
             f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
             f"called get_root with args ({filepath2!r},)\n"
             "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace() ['file1', 'file2']\n"
+            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
+            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
+            " ['file1', 'file2']\n"
             "called ShowFiles.show_screen()\n"
-            f"called update_xml() with args ([], {filepath2!r}, {filepath3!r})\n"
+            f"called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
             f'{filepath3} written, recompress by loading into lmms and rewrite as mmpz\n')
-    monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
+    monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
     monkeypatch.setattr(MockShow, 'show_screen', lambda *x: 1)
-    monkeypatch.setattr(rwrt.rewrite_gui, 'ShowFiles', MockShow)
-    monkeypatch.setattr(rwrt, 'update_xml', mock_update)
-    rwrt.copyfile(filename)
+    monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
+    monkeypatch.setattr(testee, 'update_xml', mock_update)
+    testee.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
             f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
             f"called get_root with args ({filepath2!r},)\n"
             "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace() ['file1', 'file2']\n"
-            'gui ended with nonzero returncode 1\n')
+            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
+            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
+            " ['file1', 'file2']\n"
+            'Gui ended with nonzero returncode 1\n')

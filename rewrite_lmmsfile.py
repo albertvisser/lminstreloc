@@ -9,6 +9,8 @@ import rewrite_gui
 
 instr_root = {'audiofileprocessor': pathlib.Path('~/lmms/samples').expanduser(),
               'sf2player': pathlib.Path('~/lmms/soundfonts').expanduser()}
+sysloc = pathlib.Path('/usr/share/lmms/samples')
+userloc = pathlib.Path('~/lmms/samples').expanduser()
 # er zijn meerdere paden per type instrument mogelijk: /usr/share/sounds o.i.d. is ook mogelijk
 # een relatief pad kan ook in /usr/share/lmms/samples zitten of in /usr/share/soundfonts
 # deze laatste is waar ik pacman/pamac de soundfonts heeft laten terechtkomen dus het zou kunnen
@@ -32,20 +34,42 @@ def copyfile(filename):
     files = find_filenames(get_root(project_copy))
     # present filenames and ask for changes
     check_files = set(x[-1] for x in files)
-    me = types.SimpleNamespace()
+    me = types.SimpleNamespace(sysloc=sysloc, userloc=userloc, whereis=whereis)
     gui = rewrite_gui.ShowFiles(me, check_files)
     value = gui.show_screen()
     if value:
-        print(f"gui ended with nonzero returncode {value}")
+        print(f"Gui ended with nonzero returncode {value}")
         return
-    # write back changes
-    changes, err = update_xml(me.filedata, project_copy, project_rewrite)
-    if err:
-        print(err)
-    elif changes:
-        print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
+    if me.filedata:
+        changes, err = update_xml(me.filedata, project_copy, project_rewrite)
+        if err:
+            print(err)
+            return
+        if changes:
+            print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
+        else:
+            print('No changes')
     else:
-        print('Done.')
+        print('Canceled')
+
+
+def whereis(filename):
+    """teruggeven op welke locaties een filenaam voorkomt
+    """
+    if filename.startswith('/'):
+        path = pathlib.Path(filename)
+        try:
+            in_sysloc = path.relative_to(sysloc) == pathlib.Path(path.name)
+        except ValueError:
+            in_sysloc = False
+        try:
+            in_userloc = path.relative_to(userloc) == pathlib.Path(path.name)
+        except ValueError:
+            in_userloc = False
+    else:
+        in_sysloc = (sysloc / filename).exists()
+        in_userloc = (userloc / filename).exists()
+    return in_sysloc, in_userloc
 
 
 def find_filenames(element):
@@ -85,24 +109,19 @@ def update_xml(dialog_data, project_copy, project_rewrite):
     changes = False
     mld = []
     for oldfile, newfile in dialog_data:
-        if pathlib.Path(newfile).exists():
-            for path in instr_root.values():
-                first_part = str(path)
-                # print(first_part)
-                if oldfile.startswith(first_part):
-                    oldfile = oldfile.replace(first_part, '')[1:]
-                    changes = True
-                if newfile.startswith(first_part):
-                    newfile = newfile.replace(first_part, '')[1:]
-                    changes = True
-            # print(oldfile, newfile)
+        ok = pathlib.Path(newfile).exists()
+        if not ok:
+            in_sysloc, in_userloc = whereis(newfile)
+            ok = any((in_sysloc, in_userloc))
+        # print(oldfile, newfile, ok)
+        if ok:
             data = data.replace(oldfile, newfile)
             changes = True
         else:
             mld.append(f"new name {newfile} not used, file doesn't exist")
     if changes and not mld:
         project_rewrite.write_text(data)
-    return '\n'.join(mld)
+    return changes, '\n'.join(mld)
 
 
 def get_root(project_copy):
