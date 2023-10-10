@@ -322,25 +322,30 @@ def test_check(monkeypatch, capsys):
         print('called ShowFiles.setup_screen()')
     def mock_set(value):
         print(f'called checkbox.setChecked({value})')
+    def mock_whereis(arg):
+        print(f'called rewrite_app.whereis with arg `{arg}`')
+        return True, False
     monkeypatch.setattr(gui.qtw.QApplication, '__init__', mock_app_init)
     monkeypatch.setattr(gui.qtw.QWidget, '__init__', mock_init)
     monkeypatch.setattr(gui.ShowFiles, 'setup_screen', mock_setup)
-    testobj = gui.ShowFiles(types.SimpleNamespace(filedata=[]), [])
+    testobj = gui.ShowFiles(types.SimpleNamespace(filedata=[], whereis=mock_whereis), [])
     ns1 = types.SimpleNamespace(text=lambda *x: 'test')
     ns2 = types.SimpleNamespace(text=lambda *x: 'new test')
     ns3 = types.SimpleNamespace(text=lambda *x: 'more test')
     ns4 = types.SimpleNamespace(text=lambda *x: '')
     ns5 = types.SimpleNamespace(setChecked=mock_set)
-    testobj.file_lines = [(ns1, '', ns2, ns5), (ns3, '', ns4, ns5)]
-    monkeypatch.setattr(gui.os.path, 'exists', lambda *x: False)
+    testobj.file_lines = [(ns1, '', '', ns2, ns5, ns5), (ns3, '', '', ns4, ns5, ns5)]
+    # monkeypatch.setattr(gui.os.path, 'exists', lambda *x: False)
     testobj.check()
     assert capsys.readouterr().out == ('called QApplication.__init__()\n'
                                        'called QWidget.__init__()\n'
                                        'called ShowFiles.setup_screen()\n'
+                                       'called rewrite_app.whereis with arg `new test`\n'
+                                       'called checkbox.setChecked(True)\n'
                                        'called checkbox.setChecked(False)\n')
-    monkeypatch.setattr(gui.os.path, 'exists', lambda *x: True)
-    testobj.check()
-    assert capsys.readouterr().out == 'called checkbox.setChecked(True)\n'
+    # monkeypatch.setattr(gui.os.path, 'exists', lambda *x: True)
+    # testobj.check()
+    # assert capsys.readouterr().out == 'called checkbox.setChecked(True)\n'
 
 
 def test_confirm(monkeypatch, capsys):
@@ -361,7 +366,7 @@ def test_confirm(monkeypatch, capsys):
     ns2 = types.SimpleNamespace(text=lambda *x: 'new test')
     ns3 = types.SimpleNamespace(text=lambda *x: 'more test')
     ns4 = types.SimpleNamespace(text=lambda *x: '')
-    testobj.file_lines = [(ns1, '', ns2), (ns3, '', ns4)]
+    testobj.file_lines = [(ns1, '', '', ns2), (ns3, '', '', ns4)]
     testobj.confirm()
     assert testobj.master.filedata == [('test', 'new test')]
     assert capsys.readouterr().out == ('called QApplication.__init__()\n'

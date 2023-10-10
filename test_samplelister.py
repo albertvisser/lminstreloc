@@ -4,7 +4,7 @@ import samplelister as testee
 
 
 def test_analyse_file():
-    assert testee.analyse_file(testee.pathlib.Path('aha.mmpz')) == {
+    assert testee.analyse_file(testee.pathlib.Path('data/aha.mmpz')) == {
             'drums/bassdrum_acoustic01.ogg',
             'drums/crash01.ogg',
             'drums/hihat_closed01.ogg',
@@ -12,7 +12,7 @@ def test_analyse_file():
             'drums/snare01.ogg',
             'reconstructed/Ledguitar2.wav',
             'reconstructed/flickbass.wav'}
-    assert testee.analyse_file(testee.pathlib.Path('alleen_al.mmp')) == {
+    assert testee.analyse_file(testee.pathlib.Path('data/alleen_al.mmp')) == {
             '/home/albert/lmms/soundfonts/FluidR3_GM.sf2',
             '/usr/share/sounds/sf2/FluidR3_GM.sf2'}
 
