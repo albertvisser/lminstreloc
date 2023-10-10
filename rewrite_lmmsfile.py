@@ -54,7 +54,9 @@ def copyfile(filename):
 
 
 def whereis(filename):
-    """teruggeven op welke locaties een filenaam voorkomt
+    """bepalen op welke locaties een filenaam voorkomt
+
+    geeft twee indicatoren terug: `staat op de systeemlocatie` en `staat op de userlocatie`
     """
     if filename.startswith('/'):
         path = pathlib.Path(filename)
