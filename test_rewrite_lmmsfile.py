@@ -28,7 +28,7 @@ def test_whereis():
 
 
 def test_find_filenames(monkeypatch, capsys):
-    element = testee.et.ElementTree(file='testdata.xml').getroot()
+    element = testee.et.ElementTree(file='data/testdata.xml').getroot()
     data = testee.find_filenames(element)
     newdata = []
     for track, tracktype, name in data:
