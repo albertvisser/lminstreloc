@@ -1,6 +1,7 @@
 import types
 import pytest
-import mockqtwidgets as mockqtw
+# import mockqtwidgets as mockqtw
+import mockgui.mockqtwidgets as mockqtw
 import rewrite_gui as gui
 
 
@@ -62,6 +63,7 @@ def test_setup_screen(monkeypatch, capsys):
     # me.conf.read_string( '\n'.join(('[one]', 'first', '', '[two]', '',
     #                                 '[Mod Directories]', 'one: one, eno', 'two: two',
     #                                 'first: first')))
+    # breakpoint()
     testobj = gui.ShowFiles(types.SimpleNamespace(filedata=[], whereis=lambda *x: (True, True)),
                             ['old_filename'])
     assert len(testobj.file_lines) == 1
@@ -75,61 +77,89 @@ def test_setup_screen(monkeypatch, capsys):
     assert capsys.readouterr().out == ('called QApplication.__init__()\n'
                                        'called QWidget.__init__()\n'
                                        'called QWidget.setWindowTitle()\n'
-                                       'called VBox.__init__()\n'
-                                       'called HBox.__init__()\n'
-                                       'called Label.__init__()\n'
-                                       'called HBox.addWidget()\n'
-                                       'called VBox.addLayout()\n'
-                                       'called Grid.__init__()\n'
-                                       'called Label.__init__()\n'
-                                       'called Grid.addWidget()\n'
-                                       'called Label.__init__()\n'
-                                       'called Grid.addWidget()\n'
-                                       'called Label.__init__()\n'
-                                       'called Grid.addWidget()\n'
-                                       'called Label.__init__()\n'
-                                       'called Grid.addWidget()\n'
-                                       'called LineEdit.__init__()\n'
-                                       'called LineEdit.insert(`old_filename`)\n'
-                                       'called LineEdit.setReadOnly(`True`)\n'
-                                       'called Grid.addWidget()\n'
-                                       'called HBox.__init__()\n'
-                                       'called CheckBox.__init__()\n'
-                                       f'called CheckBox.setChecked(True)\n'
-                                       'called CheckBox.setEnabled(False)\n'
-                                       'called HBox.addWidget()\n'
-                                       'called CheckBox.__init__()\n'
-                                       f'called CheckBox.setChecked(True)\n'
-                                       'called CheckBox.setEnabled(False)\n'
-                                       'called HBox.addWidget()\n'
-                                       'called Grid.addLayout()\n'
-                                       'called LineEdit.__init__()\n'
-                                       'called Grid.addWidget()\n'
-                                       'called HBox.__init__()\n'
-                                       'called CheckBox.__init__()\n'
-                                       'called CheckBox.setEnabled(False)\n'
-                                       'called HBox.addWidget()\n'
-                                       'called CheckBox.__init__()\n'
-                                       'called CheckBox.setEnabled(False)\n'
-                                       'called HBox.addWidget()\n'
-                                       'called Grid.addLayout()\n'
-                                       'called VBox.addLayout()\n'
-                                       'called HBox.__init__()\n'
-                                       'called HBox.addStretch()\n'
-                                       'called PushButton.__init__()\n'
-                                       'called signal.__init__()\n'
-                                       'called signal.connect()\n'
-                                       'called HBox.addWidget()\n'
-                                       'called PushButton.__init__()\n'
-                                       'called signal.__init__()\n'
-                                       'called signal.connect()\n'
-                                       'called HBox.addWidget()\n'
-                                       'called PushButton.__init__()\n'
-                                       'called signal.__init__()\n'
-                                       'called signal.connect()\n'
-                                       'called HBox.addWidget()\n'
-                                       'called HBox.addStretch()\n'
-                                       'called VBox.addLayout()\n'
+                                       'called VBox.__init__\n'
+                                       'called HBox.__init__\n'
+                                       "called Label.__init__ with args"
+                                       " ('Hieronder worden de namen getoond behorende bij de"
+                                       " gebruikte samples en soundfonts.\\nOok wordt aangegeven"
+                                       " of de bestanden werkelijk bestaan.\\nZo niet, dan kun je"
+                                       " de naam wijzigen naar wat het wel moet zijn.\\nTijdens/na"
+                                       " het invullen kun je controleren of de nieuwe namen wel"
+                                       " bestaan\\nTenslotte kun je het hele proces afbreken of"
+                                       f" de nieuwe namen laten vervangen in de xml', {testobj})\n"
+                                       "called HBox.addWidget with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockLabel'>\n"
+                                       "called VBox.addLayout with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockHBoxLayout'>\n"
+                                       'called Grid.__init__\n'
+                                       "called Label.__init__ with args"
+                                       f" ('Old filename', {testobj})\n"
+                                       "called Grid.addWidget with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockLabel'> at (0, 0)\n"
+                                       f"called Label.__init__ with args ('Sys/Usr', {testobj})\n"
+                                       "called Grid.addWidget with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockLabel'> at (0, 1)\n"
+                                       "called Label.__init__ with args"
+                                       f" ('New filename', {testobj})\n"
+                                       "called Grid.addWidget with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockLabel'> at (0, 2)\n"
+                                       f"called Label.__init__ with args ('Sys/Usr', {testobj})\n"
+                                       "called Grid.addWidget with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockLabel'> at (0, 3)\n"
+                                       'called LineEdit.__init__\n'
+                                       'called LineEdit.insert with arg `old_filename`\n'
+                                       'called LineEdit.setReadOnly with arg `True`\n'
+                                       "called Grid.addWidget with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockLineEdit'> at (1, 0)\n"
+                                       'called HBox.__init__\n'
+                                       'called CheckBox.__init__\n'
+                                       'called CheckBox.setChecked with arg True\n'
+                                       'called CheckBox.setEnabled with arg False\n'
+                                       'called HBox.addWidget with arg of type'
+                                       " <class 'mockgui.mockqtwidgets.MockCheckBox'>\n"
+                                       'called CheckBox.__init__\n'
+                                       'called CheckBox.setChecked with arg True\n'
+                                       'called CheckBox.setEnabled with arg False\n'
+                                       'called HBox.addWidget with arg of type'
+                                       " <class 'mockgui.mockqtwidgets.MockCheckBox'>\n"
+                                       'called Grid.addLayout with arg of type'
+                                       " <class 'mockgui.mockqtwidgets.MockHBoxLayout'> at (1, 1)\n"
+                                       'called LineEdit.__init__\n'
+                                       "called Grid.addWidget with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockLineEdit'> at (1, 2)\n"
+                                       'called HBox.__init__\n'
+                                       'called CheckBox.__init__\n'
+                                       'called CheckBox.setEnabled with arg False\n'
+                                       'called HBox.addWidget with arg of type'
+                                       " <class 'mockgui.mockqtwidgets.MockCheckBox'>\n"
+                                       'called CheckBox.__init__\n'
+                                       'called CheckBox.setEnabled with arg False\n'
+                                       'called HBox.addWidget with arg of type'
+                                       " <class 'mockgui.mockqtwidgets.MockCheckBox'>\n"
+                                       "called Grid.addLayout with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockHBoxLayout'> at (1, 3)\n"
+                                       "called VBox.addLayout with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockGridLayout'>\n"
+                                       'called HBox.__init__\n'
+                                       'called HBox.addStretch\n'
+                                       "called PushButton.__init__ with args"
+                                       f" {'&Controleren', testobj}\n"
+                                       f"called Signal.connect with args ({testobj.check},)\n"
+                                       'called HBox.addWidget with arg of type'
+                                       " <class 'mockgui.mockqtwidgets.MockPushButton'>\n"
+                                       'called PushButton.__init__ with args'
+                                       f" {'&Vervangen', testobj}\n"
+                                       f'called Signal.connect with args ({testobj.confirm},)\n'
+                                       'called HBox.addWidget with arg of type'
+                                       " <class 'mockgui.mockqtwidgets.MockPushButton'>\n"
+                                       'called PushButton.__init__ with args '
+                                       f"{'&Afbreken', testobj}\n"
+                                       f"called Signal.connect with args ({testobj.close},)\n"
+                                       'called HBox.addWidget with arg of type'
+                                       " <class 'mockgui.mockqtwidgets.MockPushButton'>\n"
+                                       'called HBox.addStretch\n'
+                                       "called VBox.addLayout with arg of type"
+                                       " <class 'mockgui.mockqtwidgets.MockHBoxLayout'>\n"
                                        'called QWidget.setLayout()\n')
 
 
@@ -160,13 +190,13 @@ def test_show_screen(monkeypatch, capsys):
     assert capsys.readouterr().out == ('called QApplication.__init__()\n'
                                        'called QWidget.__init__()\n'
                                        'called ShowFiles.setup_screen()\n'
-                                       'called action.__init__()\n'
-                                       'called signal.connect()\n'
-                                       'call action.setShortcut with arg `Ctrl+Enter`\n'
+                                       'called Action.__init__ with text `Done`\n'
+                                       f'called Signal.connect with args ({testobj.confirm},)\n'
+                                       'called Action.setShortcut with arg `Ctrl+Enter`\n'
                                        'called QWidget.addAction()\n'
-                                       'called action.__init__()\n'
-                                       'called signal.connect()\n'
-                                       'call action.setShortcut with arg `Escape`\n'
+                                       'called Action.__init__ with text `Cancel`\n'
+                                       f'called Signal.connect with args ({testobj.close},)\n'
+                                       'called Action.setShortcut with arg `Escape`\n'
                                        'called QWidget.addAction()\n'
                                        'called QWidget.show()\n'
                                        'called QApplication.exec()\n')
