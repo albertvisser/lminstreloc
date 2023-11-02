@@ -190,11 +190,11 @@ def test_show_screen(monkeypatch, capsys):
     assert capsys.readouterr().out == ('called QApplication.__init__()\n'
                                        'called QWidget.__init__()\n'
                                        'called ShowFiles.setup_screen()\n'
-                                       'called Action.__init__ with text `Done`\n'
+                                       f"called Action.__init__ with args ('Done', {testobj})\n"
                                        f'called Signal.connect with args ({testobj.confirm},)\n'
                                        'called Action.setShortcut with arg `Ctrl+Enter`\n'
                                        'called QWidget.addAction()\n'
-                                       'called Action.__init__ with text `Cancel`\n'
+                                       f"called Action.__init__ with args ('Cancel', {testobj})\n"
                                        f'called Signal.connect with args ({testobj.close},)\n'
                                        'called Action.setShortcut with arg `Escape`\n'
                                        'called QWidget.addAction()\n'
