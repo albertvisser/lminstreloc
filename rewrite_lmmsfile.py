@@ -15,7 +15,7 @@ userloc = pathlib.Path('~/lmms/samples').expanduser()
 # een relatief pad kan ook in /usr/share/lmms/samples zitten of in /usr/share/soundfonts
 # deze laatste is waar ik pacman/pamac de soundfonts heeft laten terechtkomen dus het zou kunnen
 # zijn dat lmms die niet kent
-# als ik ze sleep vanuit de linkerbalk krijg ik relatieve locaties, als ik ze selecteer in de
+# als ik ze in LMMS sleep vanuit de linkerbalk krijg ik relatieve locaties, als ik ze selecteer in de
 # "instrumentblokjes" krijg ik absolute (volledige) paden
 # ik kan dus beter de paden zoals ze zijn onthouden en uitproberen welke kloppen
 
@@ -61,11 +61,11 @@ def whereis(filename):
     if filename.startswith('/'):
         path = pathlib.Path(filename)
         try:
-            in_sysloc = path.relative_to(sysloc) == pathlib.Path(path.name)
+            in_sysloc = bool(path.relative_to(sysloc))
         except ValueError:
             in_sysloc = False
         try:
-            in_userloc = path.relative_to(userloc) == pathlib.Path(path.name)
+            in_userloc = bool(path.relative_to(userloc))
         except ValueError:
             in_userloc = False
     else:
