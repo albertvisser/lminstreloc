@@ -106,13 +106,14 @@ def test_copyfile(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(testee.subprocess, 'run', mock_run)
     monkeypatch.setattr(testee, 'get_root', mock_get_root)
     monkeypatch.setattr(testee, 'find_filenames', mock_find)
-
+    monkeypatch.setattr(testee, 'temploc', tmp_path)
     monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
     monkeypatch.setattr(testee, 'update_xml', mock_update_message)
     filepath = tmp_path / 'test_testee.mmpz'
     filename = str(filepath)
     filepath2 = filepath.with_suffix('.mmp')
-    filepath3 = filepath.with_name(f'{filepath.stem}-2.mmp')
+    filepath3 = filepath.with_name(f'{filepath.stem}-relocated.mmp')
+    filepath4 = filepath3.with_suffix('.mmpz')
     testee.copyfile(filename)
     assert capsys.readouterr().out == (
             f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
@@ -164,7 +165,10 @@ def test_copyfile(monkeypatch, capsys, tmp_path):
             " ['file1', 'file2']\n"
             "called ShowFiles.show_screen()\n"
             f"called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
-            f'{filepath3} written, recompress by loading into lmms and rewrite as mmpz\n')
+            # f'{filepath3} written, recompress by loading into lmms and rewrite as mmpz\n')
+            f"called subprocess.run() with args (['lmms', 'upgrade', {filepath3!r},"
+            f" {filepath4!r}],) {{}}\n"
+            "Done.\n")
     monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
     monkeypatch.setattr(MockShow, 'show_screen', lambda *x: 1)
     monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)

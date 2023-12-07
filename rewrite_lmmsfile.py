@@ -18,6 +18,7 @@ userloc = pathlib.Path('~/lmms/samples').expanduser()
 # als ik ze in LMMS sleep vanuit de linkerbalk krijg ik relatieve locaties, als ik ze selecteer in de
 # "instrumentblokjes" krijg ik absolute (volledige) paden
 # ik kan dus beter de paden zoals ze zijn onthouden en uitproberen welke kloppen
+temploc = pathlib.Path('/tmp/lminstreloc')
 
 
 def copyfile(filename):
@@ -25,8 +26,12 @@ def copyfile(filename):
     """
     projectfile = pathlib.Path(filename)
     project_name = projectfile.stem
-    project_copy = projectfile.with_suffix('.mmp')
-    project_rewrite = project_copy.with_stem(project_name + '-2')
+    # project_copy = projectfile.with_suffix('.mmp')
+    projloc = projectfile.parent
+    temploc.mkdir(exist_ok=True)
+    project_copy = (temploc / projectfile.name).with_suffix('.mmp')
+    # project_rewrite = project_copy.with_stem(project_name + '-2')
+    project_rewrite = project_copy.with_stem(project_name + '-relocated')
     # uncompress save file
     with project_copy.open('w') as _out:
         subprocess.run(['lmms', 'dump', projectfile], stdout=_out)
@@ -46,7 +51,10 @@ def copyfile(filename):
             print(err)
             return
         if changes:
-            print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
+            # print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
+            rewrite_compressed = (projloc / project_rewrite.stem).with_suffix('.mmpz')
+            subprocess.run(['lmms', 'upgrade', project_rewrite, rewrite_compressed])
+            print('Done.')
         else:
             print('No changes')
     else:
