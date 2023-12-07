@@ -43,22 +43,18 @@ def copyfile(filename):
     gui = rewrite_gui.ShowFiles(me, check_files)
     value = gui.show_screen()
     if value:
-        print(f"Gui ended with nonzero returncode {value}")
-        return
+        return f"Gui ended with nonzero returncode {value}"
     if me.filedata:
         changes, err = update_xml(me.filedata, project_copy, project_rewrite)
         if err:
-            print(err)
-            return
+            return err
         if changes:
             # print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
             rewrite_compressed = (projloc / project_rewrite.stem).with_suffix('.mmpz')
             subprocess.run(['lmms', 'upgrade', project_rewrite, rewrite_compressed])
-            print('Done.')
-        else:
-            print('No changes')
-    else:
-        print('Canceled')
+            return f'{filename} converted and saved as {rewrite_compressed}'
+        return 'No changes'
+    return 'Canceled'
 
 
 def whereis(filename):
@@ -68,14 +64,17 @@ def whereis(filename):
     """
     if filename.startswith('/'):
         path = pathlib.Path(filename)
-        try:
-            in_sysloc = bool(path.relative_to(sysloc))
-        except ValueError:
-            in_sysloc = False
-        try:
-            in_userloc = bool(path.relative_to(userloc))
-        except ValueError:
-            in_userloc = False
+        if path.exists():
+            try:
+                in_sysloc = path.is_relative_to(sysloc)
+            except ValueError:
+                in_sysloc = False
+            try:
+                in_userloc = path.is_relative_to(userloc)
+            except ValueError:
+                in_userloc = False
+        else:
+            in_sysloc = in_userloc = False
     else:
         in_sysloc = (sysloc / filename).exists()
         in_userloc = (userloc / filename).exists()
@@ -140,5 +139,5 @@ def get_root(project_copy):
     return data.getroot()
 
 
-def update_root(element, filename_data):
-    "update changes in the root (only needed if we do this using etree (which we don't)"
+# def update_root(element, filename_data):
+#     "update changes in the root (only needed if we do this using etree (which we don't)"
