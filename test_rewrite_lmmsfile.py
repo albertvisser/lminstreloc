@@ -2,9 +2,35 @@ import types
 import pytest
 import rewrite_lmmsfile as testee
 
-def _test_update_root(monkeypatch, capsys):
-    pass  # niet nodig als ik niet het vervangen niet via etree doe
 
+whereis_absolute = """\
+called path.exists for `/sample.file`
+called path.is_relative_to for `/sample.file` and `{testee.sysloc}`
+called path.is_relative_to for `/sample.file` and `{testee.userloc}`
+"""
+whereis_relative = """\
+called path.exists for `{testee.sysloc}/sample.file`
+called path.exists for `{testee.userloc}/sample.file`
+"""
+copyfile_min = ("called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
+                " {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
+                "called get_root with args ({filepath2!r},)\n"
+                "called find_filenames with args ('root',)\n"
+                "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
+                " userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
+                " ['file1', 'file2']\n")
+copyfile_show = "called ShowFiles.show_screen()\n"
+copyfile_upd = "called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
+copyfile_rew = ("called subprocess.run() with args (['lmms', 'upgrade', {filepath3!r},"
+               " {filepath4!r}],) {{}}\n")
+
+@pytest.fixture
+def expected_output():
+    return {'whereis_absolute': whereis_absolute, 'whereis_relative': whereis_relative,
+            'copyfile_minimal': copyfile_min + copyfile_show,
+            'copyfile_update_xml': copyfile_min + copyfile_show + copyfile_upd,
+            'copyfile_rewrite': copyfile_min + copyfile_show + copyfile_upd + copyfile_rew,
+            'copyfile_error': copyfile_min}
 
 def test_get_root(monkeypatch, capsys):
     class MockTree:
@@ -16,15 +42,69 @@ def test_get_root(monkeypatch, capsys):
     assert testee.get_root('test') == 'root'
 
 
-def test_whereis():
-    path = str(testee.sysloc / 'sample.file')
-    assert testee.whereis(path) == (True, False)
-    path = str(testee.userloc / 'sample.file')
-    assert testee.whereis(path) == (False, True)
-    assert testee.whereis('/nowhere/sample.file') == (False, False)
-    # dit is quick 'n dirty, ervan uitgaande dat deze bestanden op de betreffende locaties staan
-    assert testee.whereis('drums/snare01.ogg') == (True, False)
-    assert testee.whereis('audio-wav/guitar/Ledguitar2_reconstructed.wav') == (False, True)
+def test_whereis(monkeypatch, capsys, expected_output):
+    counter = 0
+    def mock_exists_no(path):
+        print(f'called path.exists for `{path}`')
+        return False
+    def mock_exists_yes(path):
+        print(f'called path.exists for `{path}`')
+        return True
+    def mock_exists_yes_then_no(path):
+        nonlocal counter
+        print(f'called path.exists for `{path}`')
+        counter += 1
+        if counter == 1:
+            return True
+        return False
+    def mock_exists_no_then_yes(path):
+        nonlocal counter
+        print(f'called path.exists for `{path}`')
+        counter += 1
+        if counter == 1:
+            return False
+        return True
+    def mock_is_relative_no_then_yes(path, loc):
+        nonlocal counter
+        print(f'called path.is_relative_to for `{path}` and `{loc}`')
+        counter += 1
+        if counter == 1:
+            return False
+        return True
+    def mock_is_relative_yes_then_no(path, loc):
+        nonlocal counter
+        print(f'called path.is_relative_to for `{path}` and `{loc}`')
+        counter += 1
+        if counter == 1:
+            return True
+        return False
+    def mock_is_relative_exc(path, loc):
+        print(f'called path.is_relative_to for `{path}` and `{loc}`')
+        raise ValueError
+    monkeypatch.setattr(testee.pathlib.Path, 'exists', mock_exists_no)
+    monkeypatch.setattr(testee.pathlib.Path, 'is_relative_to', mock_is_relative_no_then_yes)
+    assert testee.whereis('/sample.file') == (False, False)
+    assert capsys.readouterr().out == 'called path.exists for `/sample.file`\n'
+    monkeypatch.setattr(testee.pathlib.Path, 'exists', mock_exists_yes)
+    counter = 0
+    assert testee.whereis('/sample.file') == (False, True)
+    assert capsys.readouterr().out == expected_output['whereis_absolute'].format(testee=testee)
+    monkeypatch.setattr(testee.pathlib.Path, 'is_relative_to', mock_is_relative_yes_then_no)
+    counter = 0
+    assert testee.whereis('/sample.file') == (True, False)
+    assert capsys.readouterr().out == expected_output['whereis_absolute'].format(testee=testee)
+    monkeypatch.setattr(testee.pathlib.Path, 'is_relative_to', mock_is_relative_exc)
+    counter = 0
+    assert testee.whereis('/sample.file') == (False, False)
+    assert capsys.readouterr().out == expected_output['whereis_absolute'].format(testee=testee)
+    counter = 0
+    monkeypatch.setattr(testee.pathlib.Path, 'exists', mock_exists_yes_then_no)
+    assert testee.whereis('sample.file') == (True, False)
+    assert capsys.readouterr().out == expected_output['whereis_relative'].format(testee=testee)
+    counter = 0
+    monkeypatch.setattr(testee.pathlib.Path, 'exists', mock_exists_no_then_yes)
+    assert testee.whereis('sample.file') == (False, True)
+    assert capsys.readouterr().out == expected_output['whereis_relative'].format(testee=testee)
 
 
 def test_find_filenames(monkeypatch, capsys):
@@ -69,7 +149,7 @@ def test_update_xml(monkeypatch, capsys):
                                        " 'bargl bargl boingo bboingo')\n")
 
 
-def test_copyfile(monkeypatch, capsys, tmp_path):
+def test_copyfile(monkeypatch, capsys, tmp_path, expected_output):
     def mock_run(*args, **kwargs):
         print('called subprocess.run() with args', args, kwargs)
     def mock_get_root(*args):
@@ -114,72 +194,31 @@ def test_copyfile(monkeypatch, capsys, tmp_path):
     filepath2 = filepath.with_suffix('.mmp')
     filepath3 = filepath.with_name(f'{filepath.stem}-relocated.mmp')
     filepath4 = filepath3.with_suffix('.mmpz')
-    testee.copyfile(filename)
-    assert capsys.readouterr().out == (
-            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
-            f"called get_root with args ({filepath2!r},)\n"
-            "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
-            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
-            " ['file1', 'file2']\n"
-            "called ShowFiles.show_screen()\n"
-            'Canceled\n')
+    assert testee.copyfile(filename) == 'Canceled'
+    bindings = {'filepath': filepath, 'filepath2': filepath2, 'testee': testee}
+    assert capsys.readouterr().out == expected_output['copyfile_minimal'].format(**bindings)
 
     monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow2)
     monkeypatch.setattr(testee, 'update_xml', mock_update_message)
-    testee.copyfile(filename)
-    assert capsys.readouterr().out == (
-            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
-            f"called get_root with args ({filepath2!r},)\n"
-            "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
-            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
-            " ['file1', 'file2']\n"
-            "called ShowFiles.show_screen()\n"
-            f"called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
-            'Message\n')
+    assert testee.copyfile(filename) == 'Message'
+    bindings = {'filepath': filepath, 'filepath2': filepath2, 'filepath3': filepath3,
+                'testee': testee}
+    assert capsys.readouterr().out == expected_output['copyfile_update_xml'].format(**bindings)
     monkeypatch.setattr(testee, 'update_xml', mock_update_nochanges)
-    testee.copyfile(filename)
-    assert capsys.readouterr().out == (
-            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
-            f"called get_root with args ({filepath2!r},)\n"
-            "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
-            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
-            " ['file1', 'file2']\n"
-            "called ShowFiles.show_screen()\n"
-            f"called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
-            'No changes\n')
+    assert testee.copyfile(filename) == 'No changes'
+    bindings = {'filepath': filepath, 'filepath2': filepath2, 'filepath3': filepath3,
+                'testee': testee}
+    assert capsys.readouterr().out == expected_output['copyfile_update_xml'].format(**bindings)
+            # klopt dit wel? moet hij de xml wel updaten als er niks veranderd is?
     monkeypatch.setattr(testee, 'update_xml', mock_update)
-    testee.copyfile(filename)
-    assert capsys.readouterr().out == (
-            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
-            f"called get_root with args ({filepath2!r},)\n"
-            "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
-            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
-            " ['file1', 'file2']\n"
-            "called ShowFiles.show_screen()\n"
-            f"called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
-            # f'{filepath3} written, recompress by loading into lmms and rewrite as mmpz\n')
-            f"called subprocess.run() with args (['lmms', 'upgrade', {filepath3!r},"
-            f" {filepath4!r}],) {{}}\n"
-            "Done.\n")
+    assert testee.copyfile(filename) == f"{filename} converted and saved as {filepath4}"
+    bindings = {'filepath': filepath, 'filepath2': filepath2, 'filepath3': filepath3,
+                'filepath4': filepath4, 'testee': testee}
+    assert capsys.readouterr().out == expected_output['copyfile_rewrite'].format(**bindings)
     monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
     monkeypatch.setattr(MockShow, 'show_screen', lambda *x: 1)
     monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
     monkeypatch.setattr(testee, 'update_xml', mock_update)
-    testee.copyfile(filename)
-    assert capsys.readouterr().out == (
-            f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-            f" {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
-            f"called get_root with args ({filepath2!r},)\n"
-            "called find_filenames with args ('root',)\n"
-            "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
-            f" userloc=PosixPath('/home/albert/lmms/samples'), whereis={testee.whereis})"
-            " ['file1', 'file2']\n"
-            'Gui ended with nonzero returncode 1\n')
+    assert testee.copyfile(filename) == 'Gui ended with nonzero returncode 1'
+    bindings = {'filepath': filepath, 'filepath2': filepath2, 'testee': testee}
+    assert capsys.readouterr().out == expected_output['copyfile_error'].format(**bindings)

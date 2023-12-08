@@ -137,7 +137,3 @@ def get_root(project_copy):
     "get the root of the xml file"
     data = et.ElementTree(file=str(project_copy))
     return data.getroot()
-
-
-# def update_root(element, filename_data):
-#     "update changes in the root (only needed if we do this using etree (which we don't)"
