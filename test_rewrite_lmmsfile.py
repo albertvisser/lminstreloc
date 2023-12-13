@@ -1,4 +1,3 @@
-import types
 import pytest
 import rewrite_lmmsfile as testee
 
@@ -13,7 +12,8 @@ called path.exists for `{testee.sysloc}/sample.file`
 called path.exists for `{testee.userloc}/sample.file`
 """
 copyfile_min = ("called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
-                " {{'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w' encoding='UTF-8'>}}\n"
+                " {{'check': False, 'stdout': <_io.TextIOWrapper name='{filepath2}' mode='w'"
+                " encoding='UTF-8'>}}\n"
                 "called get_root with args ({filepath2!r},)\n"
                 "called find_filenames with args ('root',)\n"
                 "called ShowFiles() with args namespace(sysloc=PosixPath('/usr/share/lmms/samples'),"
@@ -22,7 +22,7 @@ copyfile_min = ("called subprocess.run() with args (['lmms', 'dump', {filepath!r
 copyfile_show = "called ShowFiles.show_screen()\n"
 copyfile_upd = "called update_xml() with args (['filedata'], {filepath2!r}, {filepath3!r})\n"
 copyfile_rew = ("called subprocess.run() with args (['lmms', 'upgrade', {filepath3!r},"
-               " {filepath4!r}],) {{}}\n")
+                " {filepath4!r}],) {{'check': False}}\n")
 
 @pytest.fixture
 def expected_output():

@@ -26,10 +26,7 @@ def test_list_files(monkeypatch, capsys):
     def mock_isdir(*args):
         nonlocal count
         count += 1
-        if count == 2:
-            return True
-        else:
-            return False
+        return count == 2
     def mock_analyse(*args):
         print('called analyse_file() with args', args)
         return ('/absolute/path', 'rel/file1', 'rel/file2', 'rel/file3')
@@ -79,10 +76,7 @@ def test_list_samples(monkeypatch, capsys):
     def mock_isdir(*args):
         nonlocal count
         count += 1
-        if count == 2:
-            return True
-        else:
-            return False
+        return count == 2
     def mock_stat(*args):
         return types.SimpleNamespace(st_size=99, st_mtime=1000)
     monkeypatch.setattr(testee.pathlib.Path, 'iterdir', mock_iterdir)

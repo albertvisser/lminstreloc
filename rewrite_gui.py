@@ -28,14 +28,14 @@ class ShowFiles(qtw.QWidget):
         # self.setWindowIcon()
         vbox = qtw.QVBoxLayout()
         hbox = qtw.QHBoxLayout()
-        hbox.addWidget(qtw.QLabel('\n'.join((
-            'Hieronder worden de namen getoond behorende bij de gebruikte samples en soundfonts.',
-            'Ook wordt aangegeven of de bestanden werkelijk bestaan.',
+        hbox.addWidget(qtw.QLabel(
+            'Hieronder worden de namen getoond behorende bij de gebruikte samples en soundfonts.\n'
+            'Ook wordt aangegeven of de bestanden werkelijk bestaan.\n'
             'Zo niet, dan kun je de naam wijzigen naar wat het wel moet zijn '
-            '(als je het een invult en het ander niet, dan blijft wat je niet invult ongewijzigd).',
-            'Tijdens/na het invullen kun je laten controleren of de nieuwe namen wel bestaan',
+            '(als je het een invult en het ander niet, dan blijft wat je niet invult ongewijzigd).\n'
+            'Tijdens/na het invullen kun je laten controleren of de nieuwe namen wel bestaan\n'
             'Tenslotte kun je het hele proces afbreken of de nieuwe namen laten vervangen'
-            ' in de xml')), self))
+            ' in de xml', self))
         vbox.addLayout(hbox)
         self.file_lines = []
         # self.column_widths = (100, 20, 100)

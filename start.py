@@ -8,11 +8,11 @@ start_here = os.path.expanduser('~/lmms/projects/*.mmpz')
 
 while True:
     result = subprocess.run(['zenity', '--file-selection', f'--filename={start_here}'],
-                            capture_output=True)
+                            check=False, capture_output=True)
     selected = result.stdout.decode().strip()
     if not selected:
         break
     message = copyfile(selected)
-    result = subprocess.run(['zenity', '--question', f'--text={message}\n\nContinue?'])
+    result = subprocess.run(['zenity', '--question', f'--text={message}\n\nContinue?'], check=False)
     if result.returncode:
         break

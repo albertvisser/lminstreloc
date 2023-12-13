@@ -62,7 +62,7 @@ def analyse_file(filename):
     if filename.suffix == '.mmpz':
         tmp_file = tmp_root / (filename.stem + '.mmp')
         with tmp_file.open('w') as _out:
-            subprocess.run(['lmms', 'dump', filename], stdout=_out)
+            subprocess.run(['lmms', 'dump', filename], check=False, stdout=_out)
     elif filename.suffix == '.mmp':
         tmp_file = filename
     # find locations of filenames in XML

@@ -68,6 +68,7 @@ def test_setup_screen(monkeypatch, capsys, expected_output):
     # bindings = {'testobj': testobj}
     assert capsys.readouterr().out == expected_output['showfiles'].format(testobj=testobj)
 
+
 def test_show_screen(monkeypatch, capsys, expected_output):
     def mock_app_init(self, *args):
         print('called QApplication.__init__()')
@@ -95,7 +96,7 @@ def test_show_screen(monkeypatch, capsys, expected_output):
     assert capsys.readouterr().out == expected_output['showscreen'].format(testobj=testobj)
 
 
-# werkt zo niet - wel tijdens aanroep van setup_screen testen
+# krijg dit zo niet aan de praat - wel tijdens aanroep van setup_screen testen
 def _test_add_file_line(monkeypatch, capsys):
     def mock_app_init(self, *args):
         print('called QApplication.__init__()')
@@ -103,28 +104,32 @@ def _test_add_file_line(monkeypatch, capsys):
         print('called QWidget.__init__()')
     def mock_setup(self, *args):
         print('called ShowFiles.setup_screen()')
-        self.grid = MockGridLayout()
+        self.grid = mockqtw.MockGridLayout()
     monkeypatch.setattr(gui.qtw.QApplication, '__init__', mock_app_init)
     monkeypatch.setattr(gui.qtw.QWidget, '__init__', mock_init)
     monkeypatch.setattr(gui.qtw, 'QGridLayout',  mockqtw.MockGridLayout)
     monkeypatch.setattr(gui.qtw, 'QLineEdit',  mockqtw.MockLineEdit)
     monkeypatch.setattr(gui.qtw, 'QCheckBox',  mockqtw.MockCheckBox)
     monkeypatch.setattr(gui.ShowFiles, 'setup_screen', mock_setup)
-    # breakpoint()
     testobj = gui.ShowFiles(types.SimpleNamespace(filedata=[]), [])
+    # assert capsys.readouterr().out == ('called QApplication.__init__()\n'
+    #                                    'called QWidget.__init__()\n'
+    #                                    'called ShowFiles.setup_screen()\n'
+    #                                    'called Grid.__init__\n')
     testobj.file_lines = []
-    testobj.add_file_lines(testobj.grid, 1, 'old filename')
+    # bij deze aanroep volgt `super-class __init__ of type ShowFiles was never called`
+    testobj.add_file_lines(testobj.grid, 1, 'old/filename')
     assert len(testobj.file_lines) == 1
     items = testobj.file_lines[0]
     assert isinstance(items[0], gui.qtw.QLineEdit)
-    assert isinstance(items[1], gui.qtw.QCheckBox)
-    assert isinstance(items[2], gui.qtw.QLineEdit)
+    assert isinstance(items[1], gui.qtw.QLineEdit)
+    assert isinstance(items[2], gui.qtw.QCheckBox)
     assert isinstance(items[3], gui.qtw.QCheckBox)
-    assert capsys.readouterr().out == ('called QApplication.__init__()\n'
-                                       'called QWidget.__init__()\n'
-                                       'called ShowFiles.setup_screen()\n'
-                                       'called checkbox.setChecked(False)\n'
-                                       )
+    assert isinstance(items[4], gui.qtw.QLineEdit)
+    assert isinstance(items[5], gui.qtw.QLineEdit)
+    assert isinstance(items[6], gui.qtw.QCheckBox)
+    assert isinstance(items[7], gui.qtw.QCheckBox)
+    assert capsys.readouterr().out == 'called checkbox.setChecked(False)\n'
 
 def test_check(monkeypatch, capsys):
     class MockLineEdit:

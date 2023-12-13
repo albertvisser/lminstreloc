@@ -34,7 +34,7 @@ def copyfile(filename):
     project_rewrite = project_copy.with_stem(project_name + '-relocated')
     # uncompress save file
     with project_copy.open('w') as _out:
-        subprocess.run(['lmms', 'dump', projectfile], stdout=_out)
+        subprocess.run(['lmms', 'dump', projectfile], check=False, stdout=_out)
     # find locations of filenames in XML
     files = find_filenames(get_root(project_copy))
     # present filenames and ask for changes
@@ -51,7 +51,7 @@ def copyfile(filename):
         if changes:
             # print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
             rewrite_compressed = (projloc / project_rewrite.stem).with_suffix('.mmpz')
-            subprocess.run(['lmms', 'upgrade', project_rewrite, rewrite_compressed])
+            subprocess.run(['lmms', 'upgrade', project_rewrite, rewrite_compressed], check=False)
             return f'{filename} converted and saved as {rewrite_compressed}'
         return 'No changes'
     return 'Canceled'
