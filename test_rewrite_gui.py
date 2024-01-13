@@ -1,5 +1,4 @@
 import types
-import pytest
 # import mockqtwidgets as mockqtw
 import mockgui.mockqtwidgets as mockqtw
 from output_fixture import expected_output

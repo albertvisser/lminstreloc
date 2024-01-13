@@ -1,5 +1,4 @@
 import types
-import pytest
 import samplelister as testee
 
 
