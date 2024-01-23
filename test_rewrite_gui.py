@@ -1,3 +1,5 @@
+"""unittests for ./rewrite_gui.py
+"""
 import types
 # import mockqtwidgets as mockqtw
 import mockgui.mockqtwidgets as mockqtw
@@ -5,11 +7,19 @@ from output_fixture import expected_output
 import rewrite_gui as gui
 
 def test_gui_init(monkeypatch, capsys):
+    """unittest for rewrite_gui.ShowFiles.gui_init
+    """
     def mock_app_init(self, *args):
+        """stub
+        """
         print('called qtw.QApplication.__init__()')
     def mock_init(self, *args):
+        """stub
+        """
         print('called qtw.QWidget.__init__()')
     def mock_setup(self, *args):
+        """stub
+        """
         print('called ShowFiles.setup_screen()')
     monkeypatch.setattr(gui.qtw.QApplication, '__init__', mock_app_init)
     monkeypatch.setattr(gui.qtw.QWidget, '__init__', mock_init)
@@ -28,17 +38,27 @@ def test_gui_init(monkeypatch, capsys):
 
 
 def test_setup_screen(monkeypatch, capsys, expected_output):
-    """unittest voor setup_screen: ShowFiles aanroepen zonder deze te monkeypatchen
+    """unittest for rewrite_gui.ShowFiles.setup_screen
+
+    ShowFiles aanroepen zonder deze te monkeypatchen
     tevens unittest voor add_file_line die hierin wordt aangeroepen
     (omdat een aparte unittest hiervoor niet lijkt te lukken)
     """
     def mock_app_init(self, *args):
+        """stub
+        """
         print('called QApplication.__init__()')
     def mock_init(self, *args):
+        """stub
+        """
         print('called QWidget.__init__()')
     def mock_setWindowTitle(self, *args):
+        """stub
+        """
         print('called QWidget.setWindowTitle()')
     def mock_setLayout(self, *args):
+        """stub
+        """
         print('called QWidget.setLayout()')
     monkeypatch.setattr(gui.qtw.QApplication, '__init__', mock_app_init)
     monkeypatch.setattr(gui.qtw.QWidget, '__init__', mock_init)
@@ -47,9 +67,9 @@ def test_setup_screen(monkeypatch, capsys, expected_output):
     monkeypatch.setattr(gui.qtw, 'QVBoxLayout', mockqtw.MockVBoxLayout)
     monkeypatch.setattr(gui.qtw, 'QHBoxLayout', mockqtw.MockHBoxLayout)
     monkeypatch.setattr(gui.qtw, 'QLabel', mockqtw.MockLabel)
-    monkeypatch.setattr(gui.qtw, 'QGridLayout',  mockqtw.MockGridLayout)
-    monkeypatch.setattr(gui.qtw, 'QLineEdit',  mockqtw.MockLineEdit)
-    monkeypatch.setattr(gui.qtw, 'QCheckBox',  mockqtw.MockCheckBox)
+    monkeypatch.setattr(gui.qtw, 'QGridLayout', mockqtw.MockGridLayout)
+    monkeypatch.setattr(gui.qtw, 'QLineEdit', mockqtw.MockLineEdit)
+    monkeypatch.setattr(gui.qtw, 'QCheckBox', mockqtw.MockCheckBox)
     monkeypatch.setattr(gui.qtw, 'QPushButton', mockqtw.MockPushButton)
     monkeypatch.setattr(gui.os.path, 'exists', lambda x: True)
     testobj = gui.ShowFiles(types.SimpleNamespace(filedata=[], whereis=lambda *x: (True, True)),
@@ -69,18 +89,32 @@ def test_setup_screen(monkeypatch, capsys, expected_output):
 
 
 def test_show_screen(monkeypatch, capsys, expected_output):
+    """unittest for rewrite_gui.ShowFiles.show_screen
+    """
     def mock_app_init(self, *args):
+        """stub
+        """
         print('called QApplication.__init__()')
     def mock_app_exec(self, *args):
+        """stub
+        """
         print('called QApplication.exec()')
         return 'okcode'
     def mock_init(self, *args):
+        """stub
+        """
         print('called QWidget.__init__()')
     def mock_addAction(self, *args):
+        """stub
+        """
         print('called QWidget.addAction()')
     def mock_show(self, *args):
+        """stub
+        """
         print('called QWidget.show()')
     def mock_setup(self, *args):
+        """stub
+        """
         print('called ShowFiles.setup_screen()')
     monkeypatch.setattr(gui.qtw.QApplication, '__init__', mock_app_init)
     monkeypatch.setattr(gui.qtw.QApplication, 'exec', mock_app_exec)
@@ -97,18 +131,26 @@ def test_show_screen(monkeypatch, capsys, expected_output):
 
 # krijg dit zo niet aan de praat - wel tijdens aanroep van setup_screen testen
 def _test_add_file_line(monkeypatch, capsys):
+    """unittest for rewrite_gui.ShowFiles.add_file_line
+    """
     def mock_app_init(self, *args):
+        """stub
+        """
         print('called QApplication.__init__()')
     def mock_init(self, *args):
+        """stub
+        """
         print('called QWidget.__init__()')
     def mock_setup(self, *args):
+        """stub
+        """
         print('called ShowFiles.setup_screen()')
         self.grid = mockqtw.MockGridLayout()
     monkeypatch.setattr(gui.qtw.QApplication, '__init__', mock_app_init)
     monkeypatch.setattr(gui.qtw.QWidget, '__init__', mock_init)
-    monkeypatch.setattr(gui.qtw, 'QGridLayout',  mockqtw.MockGridLayout)
-    monkeypatch.setattr(gui.qtw, 'QLineEdit',  mockqtw.MockLineEdit)
-    monkeypatch.setattr(gui.qtw, 'QCheckBox',  mockqtw.MockCheckBox)
+    monkeypatch.setattr(gui.qtw, 'QGridLayout', mockqtw.MockGridLayout)
+    monkeypatch.setattr(gui.qtw, 'QLineEdit', mockqtw.MockLineEdit)
+    monkeypatch.setattr(gui.qtw, 'QCheckBox', mockqtw.MockCheckBox)
     monkeypatch.setattr(gui.ShowFiles, 'setup_screen', mock_setup)
     testobj = gui.ShowFiles(types.SimpleNamespace(filedata=[]), [])
     # assert capsys.readouterr().out == ('called QApplication.__init__()\n'
@@ -130,23 +172,42 @@ def _test_add_file_line(monkeypatch, capsys):
     assert isinstance(items[7], gui.qtw.QCheckBox)
     assert capsys.readouterr().out == 'called checkbox.setChecked(False)\n'
 
+
 def test_check(monkeypatch, capsys):
+    """unittest for rewrite_gui.ShowFiles.check
+    """
     class MockLineEdit:
+        """stub
+        """
         def __init__(self, value):
             self._value = value
         def text(self):
+            """stub
+            """
             return self._value
         def setText(self, value):
+            """stub
+            """
             self.value = value
     def mock_app_init(self, *args):
+        """stub
+        """
         print('called QApplication.__init__()')
     def mock_init(self, *args):
+        """stub
+        """
         print('called QWidget.__init__()')
     def mock_setup(self, *args):
+        """stub
+        """
         print('called ShowFiles.setup_screen()')
     def mock_set(value):
+        """stub
+        """
         print(f'called checkbox.setChecked({value})')
     def mock_whereis(arg):
+        """stub
+        """
         print(f'called rewrite_app.whereis with arg `{arg}`')
         return True, False
     monkeypatch.setattr(gui.qtw.QApplication, '__init__', mock_app_init)
@@ -190,20 +251,36 @@ def test_check(monkeypatch, capsys):
 
 
 def test_confirm(monkeypatch, capsys):
+    """unittest for rewrite_gui.ShowFiles.confirm
+    """
     class MockLineEdit:
+        """stub
+        """
         def __init__(self, value):
             self._value = value
         def text(self):
+            """stub
+            """
             return self._value
         def setText(self, value):
+            """stub
+            """
             self.value = value
     def mock_app_init(self, *args):
+        """stub
+        """
         print('called QApplication.__init__()')
     def mock_init(self, *args):
+        """stub
+        """
         print('called QWidget.__init__()')
     def mock_setup(self, *args):
+        """stub
+        """
         print('called ShowFiles.setup_screen()')
     def mock_close(self):
+        """stub
+        """
         print('called ShowFiles.close()')
     monkeypatch.setattr(gui.qtw.QApplication, '__init__', mock_app_init)
     monkeypatch.setattr(gui.qtw.QWidget, '__init__', mock_init)

@@ -1,3 +1,5 @@
+"""unittests for ./rewrite_lmmsfile.py
+"""
 import pytest
 import rewrite_lmmsfile as testee
 
@@ -26,31 +28,48 @@ copyfile_rew = ("called subprocess.run() with args (['lmms', 'upgrade', {filepat
 
 @pytest.fixture
 def expected_output():
+    """output predictions
+    """
     return {'whereis_absolute': whereis_absolute, 'whereis_relative': whereis_relative,
             'copyfile_minimal': copyfile_min + copyfile_show,
             'copyfile_update_xml': copyfile_min + copyfile_show + copyfile_upd,
             'copyfile_rewrite': copyfile_min + copyfile_show + copyfile_upd + copyfile_rew,
             'copyfile_error': copyfile_min}
 
-def test_get_root(monkeypatch, capsys):
+
+def test_get_root(monkeypatch):
+    """unittest for rewrite_lmmsfile.get_root
+    """
     class MockTree:
+        """stub
+        """
         def __init__(self, *args, **kwargs):
             print('called ElementTree() with args', args, kwargs)
         def getroot(self):
+            """stub
+            """
             return 'root'
     monkeypatch.setattr(testee.et, 'ElementTree', MockTree)
     assert testee.get_root('test') == 'root'
 
 
 def test_whereis(monkeypatch, capsys, expected_output):
+    """unittest for rewrite_lmmsfile.whereis
+    """
     counter = 0
     def mock_exists_no(path):
+        """stub
+        """
         print(f'called path.exists for `{path}`')
         return False
     def mock_exists_yes(path):
+        """stub
+        """
         print(f'called path.exists for `{path}`')
         return True
     def mock_exists_yes_then_no(path):
+        """stub
+        """
         nonlocal counter
         print(f'called path.exists for `{path}`')
         counter += 1
@@ -58,6 +77,8 @@ def test_whereis(monkeypatch, capsys, expected_output):
             return True
         return False
     def mock_exists_no_then_yes(path):
+        """stub
+        """
         nonlocal counter
         print(f'called path.exists for `{path}`')
         counter += 1
@@ -65,6 +86,8 @@ def test_whereis(monkeypatch, capsys, expected_output):
             return False
         return True
     def mock_is_relative_no_then_yes(path, loc):
+        """stub
+        """
         nonlocal counter
         print(f'called path.is_relative_to for `{path}` and `{loc}`')
         counter += 1
@@ -72,6 +95,8 @@ def test_whereis(monkeypatch, capsys, expected_output):
             return False
         return True
     def mock_is_relative_yes_then_no(path, loc):
+        """stub
+        """
         nonlocal counter
         print(f'called path.is_relative_to for `{path}` and `{loc}`')
         counter += 1
@@ -79,6 +104,8 @@ def test_whereis(monkeypatch, capsys, expected_output):
             return True
         return False
     def mock_is_relative_exc(path, loc):
+        """stub
+        """
         print(f'called path.is_relative_to for `{path}` and `{loc}`')
         raise ValueError
     monkeypatch.setattr(testee.pathlib.Path, 'exists', mock_exists_no)
@@ -107,7 +134,9 @@ def test_whereis(monkeypatch, capsys, expected_output):
     assert capsys.readouterr().out == expected_output['whereis_relative'].format(testee=testee)
 
 
-def test_find_filenames(monkeypatch, capsys):
+def test_find_filenames():
+    """unittest for rewrite_lmmsfile.find_filenames
+    """
     element = testee.et.ElementTree(file='data/testdata.xml').getroot()
     data = testee.find_filenames(element)
     newdata = []
@@ -125,7 +154,11 @@ def test_find_filenames(monkeypatch, capsys):
 
 
 def test_update_xml(monkeypatch, capsys):
+    """unittest for rewrite_lmmsfile.update_xml
+    """
     def mock_write(*args):
+        """stub
+        """
         print('called path.write_text() with args', args)
     monkeypatch.setattr(testee.pathlib.Path, 'read_text', lambda *x: '')
     monkeypatch.setattr(testee.pathlib.Path, 'write_text', mock_write)
@@ -150,37 +183,59 @@ def test_update_xml(monkeypatch, capsys):
 
 
 def test_copyfile(monkeypatch, capsys, tmp_path, expected_output):
+    """unittest for rewrite_lmmsfile.copyfile
+    """
     def mock_run(*args, **kwargs):
+        """stub
+        """
         print('called subprocess.run() with args', args, kwargs)
     def mock_get_root(*args):
+        """stub
+        """
         print('called get_root with args', args)
         return 'root'
     def mock_find(*args):
+        """stub
+        """
         print('called find_filenames with args', args)
         return [('x', 'file1'), ('y', 'file2'), ('z', 'file1')]
     class MockShow:
+        """stub
+        """
         def __init__(self, me, files):
             print('called ShowFiles() with args', me, sorted(files))
             self.me = me
             self.me.filedata = []
         def show_screen(self):
+            """stub
+            """
             print('called ShowFiles.show_screen()')
             return 0
     class MockShow2:
+        """stub
+        """
         def __init__(self, me, files):
             print('called ShowFiles() with args', me, sorted(files))
             self.me = me
             self.me.filedata = ['filedata']
         def show_screen(self):
+            """stub
+            """
             print('called ShowFiles.show_screen()')
             return 0
     def mock_update(*args):
+        """stub
+        """
         print('called update_xml() with args', args)
         return True, ''
     def mock_update_message(*args):
+        """stub
+        """
         print('called update_xml() with args', args)
         return True, 'Message'
     def mock_update_nochanges(*args):
+        """stub
+        """
         print('called update_xml() with args', args)
         return False, ''
     monkeypatch.setattr(testee.subprocess, 'run', mock_run)

@@ -1,3 +1,5 @@
+"""output predictions for ./unittests/test_rewrite_gui.py
+"""
 import pytest
 
 show_files = """\
@@ -88,9 +90,6 @@ called QWidget.show()
 called QApplication.exec()
 """
 
-
-
 @pytest.fixture
 def expected_output():
     return {'showfiles': show_files, 'showscreen': show_screen}
-
