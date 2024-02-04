@@ -61,13 +61,13 @@ called Grid.addLayout with arg of type <class 'mockgui.mockqtwidgets.MockHBoxLay
 called VBox.addLayout with arg of type <class 'mockgui.mockqtwidgets.MockGridLayout'>
 called HBox.__init__
 called HBox.addStretch
-called PushButton.__init__ with args ('&Controleren', {testobj})
+called PushButton.__init__ with args ('&Controleren', {testobj}) {{}}
 called Signal.connect with args ({testobj.check},)
 called HBox.addWidget with arg of type <class 'mockgui.mockqtwidgets.MockPushButton'>
-called PushButton.__init__ with args ('&Vervangen', {testobj})
+called PushButton.__init__ with args ('&Vervangen', {testobj}) {{}}
 called Signal.connect with args ({testobj.confirm},)
 called HBox.addWidget with arg of type <class 'mockgui.mockqtwidgets.MockPushButton'>
-called PushButton.__init__ with args ('&Afbreken', {testobj})
+called PushButton.__init__ with args ('&Afbreken', {testobj}) {{}}
 called Signal.connect with args ({testobj.close},)
 called HBox.addWidget with arg of type <class 'mockgui.mockqtwidgets.MockPushButton'>
 called HBox.addStretch
