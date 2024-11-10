@@ -65,6 +65,8 @@ def analyse_file(filename):
             subprocess.run(['lmms', 'dump', filename], check=False, stdout=_out)
     elif filename.suffix == '.mmp':
         tmp_file = filename
+    else:
+        return {}
     # find locations of filenames in XML
     data = et.ElementTree(file=str(tmp_file))
     return {x[-1] for x in find_filenames(data.getroot())}

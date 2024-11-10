@@ -18,6 +18,7 @@ def test_analyse_file():
     assert testee.analyse_file(testee.pathlib.Path('data/alleen_al.mmp')) == {
             '/home/albert/lmms/soundfonts/FluidR3_GM.sf2',
             '/usr/share/sounds/sf2/FluidR3_GM.sf2'}
+    assert testee.analyse_file(testee.pathlib.Path('data/alleen_al.mpz')) == {}
 
 
 def test_list_files(monkeypatch, capsys):

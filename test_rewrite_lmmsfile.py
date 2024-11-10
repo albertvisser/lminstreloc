@@ -150,7 +150,8 @@ def test_find_filenames():
                        (['track', 'audiofileprocessor'], '0', 'reconstructed/flickbass.wav'),
                        (['track', 'audiofileprocessor'], '0', 'reconstructed/flickbass.wav'),
                        (['track', 'audiofileprocessor'], '0', 'reconstructed/Ledguitar2.wav'),
-                       (['track', 'audiofileprocessor'], '0', 'reconstructed/Ledguitar2.wav')]
+                       (['track', 'audiofileprocessor'], '0', 'reconstructed/Ledguitar2.wav'),
+                       (['track', 'audiofileprocessor'], '1', 'drums/crash01.ogg')]
 
 
 def test_update_xml(monkeypatch, capsys):
