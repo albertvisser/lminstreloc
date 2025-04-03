@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# development stuff
+logs/
+.coverage
+projdocs*
+.sessionrc
+
+# on-demaond
+data/
