@@ -1,11 +1,10 @@
 """rewrite_lmmsfile: a tool to correct filenames for instruments in LMMS modules
 """
 import pathlib
-import types
 import subprocess
 # import lxml.etree as et
 import xml.etree.ElementTree as et
-import rewrite_gui
+from . import rewrite_gui
 
 instr_root = {'audiofileprocessor': pathlib.Path('~/lmms/samples').expanduser(),
               'sf2player': pathlib.Path('~/lmms/soundfonts').expanduser()}
@@ -19,42 +18,6 @@ userloc = pathlib.Path('~/lmms/samples').expanduser()
 # "instrumentblokjes" krijg ik absolute (volledige) paden
 # ik kan dus beter de paden zoals ze zijn onthouden en uitproberen welke kloppen
 temploc = pathlib.Path('/tmp/lminstreloc')
-
-
-def copyfile(filename):
-    """main function: analyse lmms module, present filenames and write back with changes
-    """
-    projectfile = pathlib.Path(filename)
-    project_name = projectfile.stem
-    # project_copy = projectfile.with_suffix('.mmp')
-    projloc = projectfile.parent
-    temploc.mkdir(exist_ok=True)
-    project_copy = (temploc / projectfile.name).with_suffix('.mmp')
-    # project_rewrite = project_copy.with_stem(project_name + '-2')
-    project_rewrite = project_copy.with_stem(project_name + '-relocated')
-    # uncompress save file
-    with project_copy.open('w') as _out:
-        subprocess.run(['lmms', 'dump', projectfile], check=False, stdout=_out)
-    # find locations of filenames in XML
-    files = find_filenames(get_root(project_copy))
-    # present filenames and ask for changes
-    check_files = set(x[-1] for x in files)
-    me = types.SimpleNamespace(sysloc=sysloc, userloc=userloc, whereis=whereis)
-    gui = rewrite_gui.ShowFiles(me, check_files)
-    value = gui.show_screen()
-    if value:
-        return f"Gui ended with nonzero returncode {value}"
-    if me.filedata:
-        changes, err = update_xml(me.filedata, project_copy, project_rewrite)
-        if err:
-            return err
-        if changes:
-            # print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
-            rewrite_compressed = (projloc / project_rewrite.stem).with_suffix('.mmpz')
-            subprocess.run(['lmms', 'upgrade', project_rewrite, rewrite_compressed], check=False)
-            return f'{filename} converted and saved as {rewrite_compressed}'
-        return 'No changes'
-    return 'Canceled'
 
 
 def whereis(filename):
@@ -79,6 +42,56 @@ def whereis(filename):
         in_sysloc = (sysloc / filename).exists()
         in_userloc = (userloc / filename).exists()
     return in_sysloc, in_userloc
+
+
+class Rewriter:
+    """entry point
+
+    main function: analyse lmms module, present filenames and write back with changes
+    """
+    whereis = staticmethod(whereis)
+
+    def __init__(self, rootloc):
+        self.rootloc = rootloc
+        self.sysloc = sysloc
+        self.userloc = userloc
+        gui = rewrite_gui.ShowFiles(self)
+        gui.show_screen()
+
+    def process(self, filename):
+        """read filenames from the chosen file and return them to the caller
+        """
+        projectfile = pathlib.Path(filename)
+        # project_copy = projectfile.with_suffix('.mmp')
+        temploc.mkdir(exist_ok=True)
+        project_copy = (temploc / projectfile.name).with_suffix('.mmp')
+        # project_rewrite = project_copy.with_stem(project_name + '-2')
+        # uncompress save file
+        with project_copy.open('w') as _out:
+            subprocess.run(['lmms', 'dump', projectfile], check=False, stdout=_out)
+        # find locations of filenames in XML
+        files = find_filenames(get_root(project_copy))
+        # present filenames and ask for changes
+        check_files = set(x[-1] for x in files)
+        return check_files
+
+    def update_file(self, filename, filedata):
+        """(try to) write the changes back and return a message about the result
+        """
+        projectfile = pathlib.Path(filename)
+        projloc = projectfile.parent
+        project_name = projectfile.stem
+        project_copy = (temploc / projectfile.name).with_suffix('.mmp')
+        project_rewrite = project_copy.with_stem(project_name + '-relocated')
+        changes, err = update_xml(filedata, project_copy, project_rewrite)
+        if err:
+            return err
+        if changes:
+            # print(f'{project_rewrite} written, recompress by loading into lmms and rewrite as mmpz')
+            rewrite_compressed = (projloc / project_rewrite.stem).with_suffix('.mmpz')
+            subprocess.run(['lmms', 'upgrade', project_rewrite, rewrite_compressed], check=False)
+            return f'{filename} converted and saved as {rewrite_compressed}'
+        return 'No changes'
 
 
 def find_filenames(element):

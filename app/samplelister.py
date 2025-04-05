@@ -5,7 +5,7 @@ import pathlib
 import subprocess
 # import lxml.etree as et
 import xml.etree.ElementTree as et
-from rewrite_lmmsfile import sysloc, userloc, find_filenames, whereis
+from .rewrite_lmmsfile import sysloc, userloc, find_filenames, whereis
 
 tmp_root = pathlib.Path('/tmp/smplister')
 tmp_root.mkdir(exist_ok=True)

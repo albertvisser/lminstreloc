@@ -1,5 +1,5 @@
 [testdir]
-.
+unittests
 
 [testscripts]
 app: test_rewrite_lmmsfile.py
@@ -7,6 +7,6 @@ gui: test_rewrite_gui.py
 list: test_samplelister.py
 
 [testees]
-app: rewrite_lmmsfile.py
-gui: rewrite_gui.py
-list: samplelister.py
+app: app/rewrite_lmmsfile.py
+gui: app/rewrite_gui.py
+list: app/samplelister.py

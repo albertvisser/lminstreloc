@@ -3,16 +3,6 @@
 """
 import os.path
 import subprocess
-from rewrite_lmmsfile import copyfile
-start_here = os.path.expanduser('~/lmms/projects/*.mmpz')
-
-while True:
-    result = subprocess.run(['zenity', '--file-selection', f'--filename={start_here}'],
-                            check=False, capture_output=True)
-    selected = result.stdout.decode().strip()
-    if not selected:
-        break
-    message = copyfile(selected)
-    result = subprocess.run(['zenity', '--question', f'--text={message}\n\nContinue?'], check=False)
-    if result.returncode:
-        break
+from app import rewrite_lmmsfile
+start_here = os.path.expanduser('~/lmms/projects')
+rewrite_lmmsfile.Rewriter(start_here)

@@ -1,7 +1,7 @@
-"""unittests for ./rewrite_lmmsfile.py
+"""unittests for ./app/rewrite_lmmsfile.py
 """
 import pytest
-import rewrite_lmmsfile as testee
+from app import rewrite_lmmsfile as testee
 
 
 whereis_absolute = """\
@@ -35,22 +35,6 @@ def expected_output():
             'copyfile_update_xml': copyfile_min + copyfile_show + copyfile_upd,
             'copyfile_rewrite': copyfile_min + copyfile_show + copyfile_upd + copyfile_rew,
             'copyfile_error': copyfile_min}
-
-
-def test_get_root(monkeypatch):
-    """unittest for rewrite_lmmsfile.get_root
-    """
-    class MockTree:
-        """stub
-        """
-        def __init__(self, *args, **kwargs):
-            print('called ElementTree() with args', args, kwargs)
-        def getroot(self):
-            """stub
-            """
-            return 'root'
-    monkeypatch.setattr(testee.et, 'ElementTree', MockTree)
-    assert testee.get_root('test') == 'root'
 
 
 def test_whereis(monkeypatch, capsys, expected_output):
@@ -134,6 +118,122 @@ def test_whereis(monkeypatch, capsys, expected_output):
     assert capsys.readouterr().out == expected_output['whereis_relative'].format(testee=testee)
 
 
+class TestRewriter:
+    """unittest for rewrite_lmmsfile.Rewriter
+    """
+    def setup_testobj(self, monkeypatch, capsys):
+        """stub for rewrite_lmmsfile.Rewriter object
+
+        create the object skipping the normal initialization
+        intercept messages during creation
+        return the object so that other methods can be monkeypatched in the caller
+        """
+        def mock_init(self, *args):
+            """stub
+            """
+            print('called Rewriter.__init__ with args', args)
+        monkeypatch.setattr(testee.Rewriter, '__init__', mock_init)
+        testobj = testee.Rewriter()
+        assert capsys.readouterr().out == 'called Rewriter.__init__ with args ()\n'
+        return testobj
+
+    def test_init(self, monkeypatch, capsys):
+        """unittest for Rewriter.__init__
+        """
+        class MockShowFiles:
+            """stub for rewrite_gui.ShowFiles object
+            """
+            def __init__(self, parent):
+                print('called ShowFiles.__init__ with arg', parent)
+            def show_screen(self):
+                print('called ShowFiles.show_screen')
+        monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShowFiles)
+        rootloc = 'xxx'
+        testobj = testee.Rewriter(rootloc)
+        assert testobj.filename == rootloc
+        assert testobj.sysloc == testee.sysloc
+        assert testobj.userloc == testee.userloc
+        # assert isinstance(testobj.gui, testee.rewrite_gui.ShowFiles)
+        assert capsys.readouterr().out == (f"called ShowFiles.__init__ with arg {testobj}\n"
+                                           "called ShowFiles.show_screen\n")
+
+    def test_process(self, monkeypatch, capsys, tmp_path):
+        """unittest for Rewriter.process
+        """
+        def mock_run(*args, **kwargs):
+            """stub
+            """
+            print('called subprocess.run() with args', args, kwargs)
+        def mock_get_root(*args):
+            """stub
+            """
+            print('called get_root with args', args)
+            return 'root'
+        def mock_find(*args):
+            """stub
+            """
+            print('called find_filenames with args', args)
+            return [('x', 'file1'), ('y', 'file2'), ('z', 'file1')]
+        monkeypatch.setattr(testee.subprocess, 'run', mock_run)
+        monkeypatch.setattr(testee, 'get_root', mock_get_root)
+        monkeypatch.setattr(testee, 'find_filenames', mock_find)
+        monkeypatch.setattr(testee, 'temploc', tmp_path)
+        testobj = self.setup_testobj(monkeypatch, capsys)
+        filepath = tmp_path / 'test_testee.mmpz'
+        filepath2 = filepath.with_suffix('.mmp')
+        filename = str(filepath)
+        assert testobj.process(filename) == {'file1', 'file2'}
+        assert capsys.readouterr().out == (
+                f"called subprocess.run() with args (['lmms', 'dump', {filepath!r}],)"
+                f" {{'check': False, 'stdout': <_io.TextIOWrapper name='{filepath2}'"
+                " mode='w' encoding='UTF-8'>}\n"
+                f"called get_root with args ({filepath2!r},)\n"
+                "called find_filenames with args ('root',)\n")
+
+    def test_update_file(self, monkeypatch, capsys):
+        """unittest for .update_file
+        """
+        def mock_run(*args, **kwargs):
+            """stub
+            """
+            print('called subprocess.run() with args', args, kwargs)
+        def mock_update(*args):
+            """stub
+            """
+            print('called update_xml() with args', args)
+            return True, ''
+        def mock_update_message(*args):
+            """stub
+            """
+            print('called update_xml() with args', args)
+            return True, 'Message'
+        def mock_update_nochanges(*args):
+            """stub
+            """
+            print('called update_xml() with args', args)
+            return False, ''
+        monkeypatch.setattr(testee.subprocess, 'run', mock_run)
+        monkeypatch.setattr(testee, 'update_xml', mock_update_message)
+        oldpath = testee.pathlib.Path('/tmp/lminstreloc/filename.mmp')
+        newpath = testee.pathlib.Path('/tmp/lminstreloc/filename-relocated.mmp')
+        newpath2 = testee.pathlib.Path('filename-relocated.mmpz')
+        testobj = self.setup_testobj(monkeypatch, capsys)
+        assert testobj.update_file('filename', 'filedata') == "Message"
+        assert capsys.readouterr().out == (
+                f"called update_xml() with args ('filedata', {oldpath!r}, {newpath!r})\n")
+        monkeypatch.setattr(testee, 'update_xml', mock_update_nochanges)
+        assert testobj.update_file('filename', 'filedata') == "No changes"
+        assert capsys.readouterr().out == (
+                f"called update_xml() with args ('filedata', {oldpath!r}, {newpath!r})\n")
+        monkeypatch.setattr(testee, 'update_xml', mock_update)
+        assert testobj.update_file('filename', 'filedata') == (
+                "filename converted and saved as filename-relocated.mmpz")
+        assert capsys.readouterr().out == (
+                f"called update_xml() with args ('filedata', {oldpath!r}, {newpath!r})\n"
+                "called subprocess.run() with args"
+                f" (['lmms', 'upgrade', {newpath!r}, {newpath2!r}],) {{'check': False}}\n")
+
+
 def test_find_filenames():
     """unittest for rewrite_lmmsfile.find_filenames
     """
@@ -183,98 +283,18 @@ def test_update_xml(monkeypatch, capsys):
                                        " 'bargl bargl boingo bboingo')\n")
 
 
-def test_copyfile(monkeypatch, capsys, tmp_path, expected_output):
-    """unittest for rewrite_lmmsfile.copyfile
+def test_get_root(monkeypatch, capsys):
+    """unittest for rewrite_lmmsfile.get_root
     """
-    def mock_run(*args, **kwargs):
+    class MockTree:
         """stub
         """
-        print('called subprocess.run() with args', args, kwargs)
-    def mock_get_root(*args):
-        """stub
-        """
-        print('called get_root with args', args)
-        return 'root'
-    def mock_find(*args):
-        """stub
-        """
-        print('called find_filenames with args', args)
-        return [('x', 'file1'), ('y', 'file2'), ('z', 'file1')]
-    class MockShow:
-        """stub
-        """
-        def __init__(self, me, files):
-            print('called ShowFiles() with args', me, sorted(files))
-            self.me = me
-            self.me.filedata = []
-        def show_screen(self):
+        def __init__(self, *args, **kwargs):
+            print('called ElementTree() with args', args, kwargs)
+        def getroot(self):
             """stub
             """
-            print('called ShowFiles.show_screen()')
-            return 0
-    class MockShow2:
-        """stub
-        """
-        def __init__(self, me, files):
-            print('called ShowFiles() with args', me, sorted(files))
-            self.me = me
-            self.me.filedata = ['filedata']
-        def show_screen(self):
-            """stub
-            """
-            print('called ShowFiles.show_screen()')
-            return 0
-    def mock_update(*args):
-        """stub
-        """
-        print('called update_xml() with args', args)
-        return True, ''
-    def mock_update_message(*args):
-        """stub
-        """
-        print('called update_xml() with args', args)
-        return True, 'Message'
-    def mock_update_nochanges(*args):
-        """stub
-        """
-        print('called update_xml() with args', args)
-        return False, ''
-    monkeypatch.setattr(testee.subprocess, 'run', mock_run)
-    monkeypatch.setattr(testee, 'get_root', mock_get_root)
-    monkeypatch.setattr(testee, 'find_filenames', mock_find)
-    monkeypatch.setattr(testee, 'temploc', tmp_path)
-    monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
-    monkeypatch.setattr(testee, 'update_xml', mock_update_message)
-    filepath = tmp_path / 'test_testee.mmpz'
-    filename = str(filepath)
-    filepath2 = filepath.with_suffix('.mmp')
-    filepath3 = filepath.with_name(f'{filepath.stem}-relocated.mmp')
-    filepath4 = filepath3.with_suffix('.mmpz')
-    assert testee.copyfile(filename) == 'Canceled'
-    bindings = {'filepath': filepath, 'filepath2': filepath2, 'testee': testee}
-    assert capsys.readouterr().out == expected_output['copyfile_minimal'].format(**bindings)
-
-    monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow2)
-    monkeypatch.setattr(testee, 'update_xml', mock_update_message)
-    assert testee.copyfile(filename) == 'Message'
-    bindings = {'filepath': filepath, 'filepath2': filepath2, 'filepath3': filepath3,
-                'testee': testee}
-    assert capsys.readouterr().out == expected_output['copyfile_update_xml'].format(**bindings)
-    monkeypatch.setattr(testee, 'update_xml', mock_update_nochanges)
-    assert testee.copyfile(filename) == 'No changes'
-    bindings = {'filepath': filepath, 'filepath2': filepath2, 'filepath3': filepath3,
-                'testee': testee}
-    assert capsys.readouterr().out == expected_output['copyfile_update_xml'].format(**bindings)
-            # klopt dit wel? moet hij de xml wel updaten als er niks veranderd is?
-    monkeypatch.setattr(testee, 'update_xml', mock_update)
-    assert testee.copyfile(filename) == f"{filename} converted and saved as {filepath4}"
-    bindings = {'filepath': filepath, 'filepath2': filepath2, 'filepath3': filepath3,
-                'filepath4': filepath4, 'testee': testee}
-    assert capsys.readouterr().out == expected_output['copyfile_rewrite'].format(**bindings)
-    monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
-    monkeypatch.setattr(MockShow, 'show_screen', lambda *x: 1)
-    monkeypatch.setattr(testee.rewrite_gui, 'ShowFiles', MockShow)
-    monkeypatch.setattr(testee, 'update_xml', mock_update)
-    assert testee.copyfile(filename) == 'Gui ended with nonzero returncode 1'
-    bindings = {'filepath': filepath, 'filepath2': filepath2, 'testee': testee}
-    assert capsys.readouterr().out == expected_output['copyfile_error'].format(**bindings)
+            return 'root'
+    monkeypatch.setattr(testee.et, 'ElementTree', MockTree)
+    assert testee.get_root('test') == 'root'
+    assert capsys.readouterr().out == ("called ElementTree() with args () {'file': 'test'}\n")
